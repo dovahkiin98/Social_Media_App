@@ -1,6 +1,6 @@
 package net.inferno.socialmedia.ui.apps
 
-import android.content.Intent
+import android.widget.Toast
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -32,7 +32,6 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.rememberTopAppBarState
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
@@ -49,7 +48,6 @@ import androidx.compose.ui.unit.sp
 import androidx.core.graphics.drawable.toBitmap
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
-import kotlinx.coroutines.launch
 import net.inferno.socialmedia.R
 import net.inferno.socialmedia.model.UIState
 import net.inferno.socialmedia.model.UserApp
@@ -181,9 +179,17 @@ fun AppsUI(
                             },
                             modifier = Modifier
                                 .clickable {
-                                    context.startActivity(Intent().apply {
-                                        `package` = it.packageName
-                                    })
+                                    val launchIntent = viewModel.intent(it)
+
+                                    try {
+                                        context.startActivity(launchIntent!!)
+                                    } catch (e: Exception) {
+                                        Toast.makeText(
+                                            context,
+                                            "Unable to launch intent ${e.message}",
+                                            Toast.LENGTH_SHORT,
+                                        ).show()
+                                    }
                                 }
                         )
                     }

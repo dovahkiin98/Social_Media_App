@@ -58,4 +58,6 @@ class AppsViewModel @Inject constructor(
             }
         }
     }
+
+    fun intent(userApp: UserApp) = packageManager.getLaunchIntentForPackage(userApp.packageName)
 }
