@@ -7,10 +7,12 @@ import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
+import kotlinx.serialization.json.JsonObject
 import net.inferno.socialmedia.BuildConfig
 import okhttp3.Cache
 import okhttp3.Interceptor
 import okhttp3.OkHttpClient
+import okhttp3.ResponseBody.Companion.toResponseBody
 import okhttp3.logging.HttpLoggingInterceptor
 import org.json.JSONObject
 import java.io.File
@@ -85,7 +87,22 @@ class OkHttpModule {
         val response = it.proceed(requestBuilder.build())
 
         if (response.isSuccessful) {
-            response
+            val body = response.body.string()
+
+            val bodyJSON = JSONObject(body)
+
+            bodyJSON.keys().forEach { key ->
+                if(key !in listOf("error", "success", "token")) {
+                    val data = bodyJSON.get(key)
+
+                    bodyJSON.put(key, null)
+                    bodyJSON.put("data", data)
+                }
+            }
+
+            response.newBuilder()
+                .body(bodyJSON.toString().toResponseBody(response.body.contentType()))
+                .build()
         } else {
             val body = response.peekBody(Long.MAX_VALUE).string()
 

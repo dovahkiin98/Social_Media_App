@@ -1,5 +1,6 @@
 package net.inferno.socialmedia.data.di
 
+import android.content.SharedPreferences
 import com.squareup.moshi.Moshi
 import com.squareup.moshi.adapters.Rfc3339DateJsonAdapter
 import dagger.Module
@@ -7,6 +8,7 @@ import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
 import net.inferno.socialmedia.data.remote.SocialMediaService
+import net.inferno.socialmedia.utils.LocalDateAsStringAdapter
 import okhttp3.OkHttpClient
 import retrofit2.Retrofit
 import retrofit2.converter.moshi.MoshiConverterFactory
@@ -21,23 +23,21 @@ class RetrofitModule {
     @Singleton
     @Provides
     fun retrofit(
+        preferences: SharedPreferences,
         okHttpClient: OkHttpClient,
-        moshi: MoshiConverterFactory,
-    ) = Retrofit.Builder()
+        moshi: Moshi,
+    ): Retrofit = Retrofit.Builder()
         .client(okHttpClient)
-        .baseUrl("http://192.168.234.158:1000/api/")
-        .addConverterFactory(moshi)
+        .baseUrl(preferences.getString("url", "http://192.168.234.158:1000/api/")!!)
+        .addConverterFactory(MoshiConverterFactory.create(moshi))
         .build()
 
     @Singleton
     @Provides
-    fun moshi(): MoshiConverterFactory {
-        val moshi = Moshi.Builder()
-            .add(Date::class.java, Rfc3339DateJsonAdapter().nullSafe())
-            .build()
-
-        return MoshiConverterFactory.create(moshi)
-    }
+    fun moshi(): Moshi = Moshi.Builder()
+        .add(Date::class.java, Rfc3339DateJsonAdapter().nullSafe())
+        .add(LocalDateAsStringAdapter())
+        .build()
 
     @Singleton
     @Provides

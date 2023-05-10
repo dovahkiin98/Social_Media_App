@@ -8,12 +8,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.PlainTooltipBox
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
@@ -41,6 +36,7 @@ import kotlinx.coroutines.launch
 import net.inferno.socialmedia.R
 import net.inferno.socialmedia.model.UIState
 import net.inferno.socialmedia.ui.main.Routes
+import net.inferno.socialmedia.view.BackIconButton
 
 @OptIn(
     ExperimentalComposeUiApi::class,
@@ -163,26 +159,13 @@ fun RegisterUI(
                     )
                 },
                 navigationIcon = {
-                    PlainTooltipBox(tooltip = {
-                        Text(stringResource(id = R.string.back))
-                    }) {
-                        IconButton(
-                            onClick = {
-                                if (pagerState.currentPage != 0) {
-                                    coroutineScope.launch {
-                                        pagerState.animateScrollToPage(0)
-                                    }
-                                } else {
-                                    navController.popBackStack()
-                                }
-                            },
-                            modifier = Modifier
-                                .tooltipAnchor()
-                        ) {
-                            Icon(
-                                Icons.Default.ArrowBack,
-                                contentDescription = stringResource(id = R.string.back),
-                            )
+                    BackIconButton {
+                        if (pagerState.currentPage != 0) {
+                            coroutineScope.launch {
+                                pagerState.animateScrollToPage(0)
+                            }
+                        } else {
+                            navController.popBackStack()
                         }
                     }
                 },

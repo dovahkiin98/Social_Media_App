@@ -34,6 +34,7 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -72,7 +73,7 @@ import java.time.temporal.ChronoUnit
 import java.util.Calendar
 import java.util.Locale
 
-@OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun RegisterPhase2(
     isLoading: Boolean,
@@ -168,7 +169,7 @@ fun RegisterPhase2(
 
         Spacer(Modifier.height(16.dp))
 
-        TextFieldDefaults.OutlinedTextFieldDecorationBox(
+        OutlinedTextFieldDefaults.DecorationBox(
             value = signupRequest.address.country,
             placeholder = {
                 Text(stringResource(id = R.string.country))
@@ -200,18 +201,18 @@ fun RegisterPhase2(
             enabled = !isLoading,
             visualTransformation = VisualTransformation.None,
             container = {
-                TextFieldDefaults.OutlinedBorderContainerBox(
+                OutlinedTextFieldDefaults.ContainerBox(
                     enabled = true,
                     isError = false,
                     remember { MutableInteractionSource() },
-                    TextFieldDefaults.outlinedTextFieldColors(),
+                    OutlinedTextFieldDefaults.colors(),
                 )
             }
         )
 
         Spacer(Modifier.height(24.dp))
 
-        TextFieldDefaults.OutlinedTextFieldDecorationBox(
+        OutlinedTextFieldDefaults.DecorationBox(
             value = if (signupRequest.dateOfBirth != null)
                 signupRequest.dateOfBirth.format(DateTimeFormatter.ofPattern("dd-MM-yyyy"))
             else "",
@@ -247,11 +248,11 @@ fun RegisterPhase2(
             enabled = !isLoading,
             visualTransformation = VisualTransformation.None,
             container = {
-                TextFieldDefaults.OutlinedBorderContainerBox(
+                OutlinedTextFieldDefaults.ContainerBox(
                     enabled = true,
                     isError = false,
                     remember { MutableInteractionSource() },
-                    TextFieldDefaults.outlinedTextFieldColors(),
+                    OutlinedTextFieldDefaults.colors(),
                 )
             }
         )

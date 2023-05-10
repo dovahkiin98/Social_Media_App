@@ -23,10 +23,63 @@
     <string name="logout">Log Out</string>
     <string name="logout_message">Are you sure you want to logout?</string>
 
-    <string name="nav_menu">Show Drawer</string>
+    <string name="nav_menu">Show Navigation Drawer</string>
     <string name="back">Back</string>
     <string name="confirm">Confirm</string>
     <string name="cancel">Cancel</string>
     <string name="yes">Yes</string>
     <string name="no">No</string>
+    <string name="followers">Followers</string>
+    <string name="unfollow">Unfollow</string>
+    <string name="follow">Follow</string>
+    <string name="following">Following</string>
+    <string name="like">Like</string>
+    <string name="comment">Comment</string>
+    <string name="view_profile_cover">View Profile Cover</string>
+    <string name="view_profile_image">View Profile Image</string>
+    <string name="upload_photo">Upload Photo</string>
+    <string name="edit_profile">Edit Profile</string>
+    <string name="save_changes">Save Changes</string>
+    <string name="uploading_image">Uploading Image</string>
+
+    <plurals name="likes">
+        <item quantity="zero"></item>
+        <item quantity="one">1 Like</item>
+        <item quantity="other">%d Likes</item>
+    </plurals>
+
+    <plurals name="comments">
+        <item quantity="zero"></item>
+        <item quantity="one">1 Comment</item>
+        <item quantity="other">%d Comments</item>
+    </plurals>
+
+    <plurals name="years_ago">
+        <item quantity="one">1 Year ago</item>
+        <item quantity="other">%d Years ago</item>
+    </plurals>
+
+    <plurals name="months_ago">
+        <item quantity="one">1 Month ago</item>
+        <item quantity="other">%d Months ago</item>
+    </plurals>
+
+    <plurals name="days_ago">
+        <item quantity="one">1 Day ago</item>
+        <item quantity="other">%d Days ago</item>
+    </plurals>
+
+    <plurals name="hours_ago">
+        <item quantity="one">1 Hour ago</item>
+        <item quantity="other">%d Hours ago</item>
+    </plurals>
+
+    <plurals name="minutes_ago">
+        <item quantity="one">1 Minute ago</item>
+        <item quantity="other">%d Minutes ago</item>
+    </plurals>
+    <string name="moments_ago">Moments ago</string>
+    <string name="edit_post">Edit Post</string>
+    <string name="delete_post">Delete Post</string>
+    <string name="delete_post_message">Are you sure you want to delete this post?</string>
 </resources>

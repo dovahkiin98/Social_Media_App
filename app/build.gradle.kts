@@ -23,7 +23,7 @@ android {
         }
     }
 
-    buildToolsVersion = "34.0.0-rc02"
+    buildToolsVersion = "34.0.0-rc03"
     compileSdk = 33
     compileSdkExtension = 4
 
@@ -117,7 +117,7 @@ android {
     }
 
     composeOptions {
-        kotlinCompilerExtensionVersion = "1.4.3"
+        kotlinCompilerExtensionVersion = "1.4.7"
     }
 }
 
@@ -160,6 +160,10 @@ dependencies {
     implementation(libs.square.moshi.adapters)
     implementation(libs.square.moshi.kotlin)
     kapt(libs.square.moshi.kotlin.codegen)
+
+    implementation(libs.coil.compose)
+    implementation(libs.touchimageview)
+    api(libs.imagecropper)
     //endregion
 
     //region Compose

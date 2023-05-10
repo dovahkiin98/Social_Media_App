@@ -2,6 +2,7 @@ package net.inferno.socialmedia.data.di
 
 import android.content.Context
 import android.content.SharedPreferences
+import androidx.preference.PreferenceDataStore
 import androidx.preference.PreferenceManager
 import dagger.Module
 import dagger.Provides

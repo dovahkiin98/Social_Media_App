@@ -1,6 +1,7 @@
 package net.inferno.socialmedia.ui.login
 
 import android.util.Patterns
+import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -17,9 +18,11 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Email
 import androidx.compose.material.icons.filled.Lock
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Divider
 import androidx.compose.material3.ElevatedButton
@@ -33,11 +36,13 @@ import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.material3.TextField
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.rememberTopAppBarState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
@@ -66,9 +71,13 @@ import kotlinx.coroutines.launch
 import net.inferno.socialmedia.BuildConfig
 import net.inferno.socialmedia.R
 import net.inferno.socialmedia.model.UIState
+import net.inferno.socialmedia.model.User
+import net.inferno.socialmedia.theme.SocialMediaTheme
 import net.inferno.socialmedia.ui.main.Routes
+import net.inferno.socialmedia.utils.CustomPreview
+import java.util.UUID
 
-@OptIn(ExperimentalComposeUiApi::class, ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalComposeUiApi::class)
 @Composable
 fun LoginUI(
     navController: NavController,
@@ -80,19 +89,15 @@ fun LoginUI(
 
     val snackbarHostState = remember { SnackbarHostState() }
 
-    var emailValue by viewModel.emailValue
-    var passwordValue by viewModel.passwordValue
+    val emailState = viewModel.emailValue
+    val passwordState = viewModel.passwordValue
+
+    val emailValue by viewModel.emailValue
+    val passwordValue by viewModel.passwordValue
 
     val uiState by viewModel.uiState.collectAsState()
 
     val coroutineScope = rememberCoroutineScope()
-
-    val isLoading by remember {
-        derivedStateOf { uiState is UIState.Loading || uiState is UIState.Success<*> }
-    }
-    var showPassword by rememberSaveable {
-        mutableStateOf(false)
-    }
 
     val validateInput: () -> Boolean = {
         if (emailValue.isBlank() || !Patterns.EMAIL_ADDRESS.matcher(emailValue).matches()) {
@@ -111,9 +116,6 @@ fun LoginUI(
             true
         }
     }
-
-    val topAppBarState = rememberTopAppBarState()
-    val topAppBarScrollBehavior = TopAppBarDefaults.pinnedScrollBehavior(topAppBarState)
 
     val login = {
         keyboardController?.hide()
@@ -143,6 +145,102 @@ fun LoginUI(
         }
     }
 
+    var showUrlDialog by remember { mutableStateOf(false) }
+
+    if (showUrlDialog) {
+        var url by viewModel.urlValue
+
+        AlertDialog(
+            onDismissRequest = {
+                showUrlDialog = false
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        viewModel.updateUrl(url)
+                        showUrlDialog = false
+                    },
+                ) {
+                    Text("Confirm")
+                }
+            },
+            dismissButton = {
+                TextButton(
+                    onClick = {
+                        showUrlDialog = false
+                    },
+                ) {
+                    Text("Cancel")
+                }
+            },
+            text = {
+                TextField(
+                    value = url,
+                    onValueChange = {
+                        url = it
+                    },
+                    singleLine = true,
+                )
+            },
+        )
+    }
+
+    LoginUI(
+        uiState = uiState,
+        emailState = emailState,
+        passwordState = passwordState,
+        snackbarHostState = snackbarHostState,
+        scrollState = scrollState,
+        onLogin = login,
+        onResetPassword = {
+            navController.navigate(Routes.RESET_PASSWORD)
+        },
+        onRegister = {
+            navController.navigate(Routes.REGISTER)
+        },
+        topAppBarModifier = Modifier
+            .then(
+                if (BuildConfig.DEBUG) Modifier.pointerInput(Unit) {
+                    detectTapGestures(
+                        onDoubleTap = {
+                            navController.navigate(Routes.APPS)
+                        },
+                        onLongPress = {
+                            showUrlDialog = true
+                        }
+                    )
+                }
+                else Modifier
+            )
+    )
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun LoginUI(
+    uiState: UIState<Unit>?,
+    emailState: MutableState<String> = remember { mutableStateOf("") },
+    passwordState: MutableState<String> = remember { mutableStateOf("") },
+    snackbarHostState: SnackbarHostState = remember { SnackbarHostState() },
+    scrollState: ScrollState = rememberScrollState(),
+    onLogin: () -> Unit = {},
+    onResetPassword: () -> Unit = {},
+    onRegister: () -> Unit = {},
+    topAppBarModifier: Modifier = Modifier,
+) {
+    var emailValue by emailState
+    var passwordValue by passwordState
+
+    val isLoading by remember(uiState) {
+        derivedStateOf { uiState is UIState.Loading || uiState is UIState.Success<*> }
+    }
+    var showPassword by rememberSaveable {
+        mutableStateOf(false)
+    }
+
+    val topAppBarState = rememberTopAppBarState()
+    val topAppBarScrollBehavior = TopAppBarDefaults.pinnedScrollBehavior(topAppBarState)
+
     Scaffold(
         topBar = {
             TopAppBar(
@@ -153,18 +251,7 @@ fun LoginUI(
                     )
                 },
                 scrollBehavior = topAppBarScrollBehavior,
-                modifier = Modifier
-                    .then(
-                        if (BuildConfig.DEBUG) Modifier.pointerInput(Unit) {
-                            detectTapGestures(
-                                onDoubleTap = {
-                                    navController.navigate(Routes.APPS)
-                                }
-                            )
-                        }
-                        else Modifier
-                    )
-
+                modifier = topAppBarModifier
             )
         },
         snackbarHost = {
@@ -241,7 +328,7 @@ fun LoginUI(
                 ),
                 keyboardActions = KeyboardActions(
                     onDone = {
-                        login()
+                        onLogin()
                     }
                 ),
                 enabled = !isLoading,
@@ -265,9 +352,7 @@ fun LoginUI(
                 Spacer(Modifier.height(8.dp))
 
                 TextButton(
-                    onClick = {
-                        navController.navigate(Routes.RESET_PASSWORD)
-                    },
+                    onClick = onResetPassword,
                 ) {
                     Text(stringResource(id = R.string.forgot_password))
                 }
@@ -276,7 +361,7 @@ fun LoginUI(
 
                 ElevatedButton(
                     onClick = {
-                        login()
+                        onLogin()
                     },
                     modifier = Modifier
                         .fillMaxWidth(),
@@ -307,9 +392,7 @@ fun LoginUI(
                 }
 
                 OutlinedButton(
-                    onClick = {
-                        navController.navigate(Routes.REGISTER)
-                    },
+                    onClick = onRegister,
                     modifier = Modifier
                         .fillMaxWidth(),
                 ) {
@@ -317,5 +400,25 @@ fun LoginUI(
                 }
             }
         }
+    }
+}
+
+@CustomPreview
+@Composable
+fun LoginUIPreviewIdle() {
+    SocialMediaTheme {
+        LoginUI(
+            uiState = null,
+        )
+    }
+}
+
+@CustomPreview
+@Composable
+fun LoginUIPreviewLoading() {
+    SocialMediaTheme {
+        LoginUI(
+            uiState = UIState.Loading(),
+        )
     }
 }

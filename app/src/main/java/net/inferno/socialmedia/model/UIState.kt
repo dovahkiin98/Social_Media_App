@@ -5,6 +5,12 @@ open class UIState<T> private constructor(
     val error: Exception? = null,
     val data: T? = null,
 ) {
+    fun refresh(): UIState<T> = if (this is Success) {
+        Refreshing(this.data!!)
+    } else {
+        Loading()
+    }
+
     class Loading<T> : UIState<T>(loading = true)
 
     class Refreshing<T>(

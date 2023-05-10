@@ -51,6 +51,7 @@ import androidx.navigation.NavController
 import net.inferno.socialmedia.R
 import net.inferno.socialmedia.model.UIState
 import net.inferno.socialmedia.model.UserApp
+import net.inferno.socialmedia.view.BackIconButton
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -81,21 +82,8 @@ fun AppsUI(
                 },
                 scrollBehavior = topAppBarScrollBehavior,
                 navigationIcon = {
-                    PlainTooltipBox(tooltip = {
-                        Text(stringResource(id = R.string.back))
-                    }) {
-                        IconButton(
-                            onClick = {
-                                navController.popBackStack()
-                            },
-                            modifier = Modifier
-                                .tooltipAnchor()
-                        ) {
-                            Icon(
-                                Icons.Default.ArrowBack,
-                                contentDescription = stringResource(id = R.string.back),
-                            )
-                        }
+                    BackIconButton {
+                        navController.popBackStack()
                     }
                 },
             )

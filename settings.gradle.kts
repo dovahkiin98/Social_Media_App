@@ -3,11 +3,13 @@
 include(":privacysandboxprovider")
 
 
-pluginManagement  {
+pluginManagement {
     repositories {
         gradlePluginPortal()
         google()
         mavenCentral()
+        maven { setUrl("https://jitpack.io") }
+        jcenter()
     }
 }
 
@@ -16,6 +18,8 @@ dependencyResolutionManagement {
     repositories {
         google()
         mavenCentral()
+        maven { setUrl("https://jitpack.io") }
+        jcenter()
     }
 }
 
