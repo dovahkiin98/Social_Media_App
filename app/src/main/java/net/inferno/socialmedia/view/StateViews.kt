@@ -15,10 +15,12 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 
 @Composable
-fun LoadingView() {
+fun LoadingView(
+    modifier: Modifier = Modifier,
+) {
     Box(
         contentAlignment = Alignment.Center,
-        modifier = Modifier.fillMaxSize(),
+        modifier = modifier.fillMaxSize(),
     ) {
         CircularProgressIndicator()
     }
@@ -27,11 +29,12 @@ fun LoadingView() {
 @Composable
 fun ErrorView(
     error: Exception,
+    modifier: Modifier = Modifier,
     onRetry: (() -> Unit)?,
 ) {
     Box(
         contentAlignment = Alignment.Center,
-        modifier = Modifier.fillMaxSize(),
+        modifier = modifier.fillMaxSize(),
     ) {
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,

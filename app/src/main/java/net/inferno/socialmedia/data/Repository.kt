@@ -7,6 +7,7 @@ import com.squareup.moshi.Moshi
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import net.inferno.socialmedia.data.remote.RemoteDataSource
+import net.inferno.socialmedia.model.Comment
 import net.inferno.socialmedia.model.Post
 import net.inferno.socialmedia.model.User
 import net.inferno.socialmedia.model.UserDetails
@@ -233,6 +234,47 @@ class Repository @Inject constructor(
     //endregion
 
     //region Posts
+    suspend fun getPostDetails(postId: String): Post {
+        val response = makeRequest {
+            remoteDataSource.getPostDetails(postId)
+        }
+
+        val post = response.data!!
+
+        post.publisher.profileImageUrl = getUserProfileImage(post.publisher)
+        post.files.forEach {
+            it.imageUrl = getPostImage(post, it)
+        }
+
+        return post
+    }
+
+    suspend fun getPostComments(postId: String): List<Comment> {
+        val response = makeRequest {
+            remoteDataSource.getPostComments(postId)
+        }
+
+        val comments = response.data!!
+
+        for (comment in comments) {
+            comment.user.profileImageUrl = getUserProfileImage(comment.user)
+
+            populateReplies(comment)
+        }
+
+        return comments
+    }
+
+    private fun populateReplies(comment: Comment) {
+        comment.replies.forEach { reply ->
+            reply.user.profileImageUrl = getUserProfileImage(reply.user)
+
+            if (reply.replies.isNotEmpty()) {
+                populateReplies(reply)
+            }
+        }
+    }
+
     suspend fun likePost(post: Post): Post {
         val response = makeRequest {
             remoteDataSource.likePost(post.id)
@@ -252,6 +294,27 @@ class Repository @Inject constructor(
         val response = makeRequest {
             remoteDataSource.deletePost(post.id)
         }
+    }
+
+
+    suspend fun likeComment(comment: Comment): Comment {
+        val response = makeRequest {
+            remoteDataSource.likeComment(
+                mapOf(
+                    "reaction" to "like",
+                    "postId" to comment.postId,
+                    "commentId" to comment.id,
+                )
+            )
+        }
+
+        val newComment = response.data!!
+
+        newComment.user.profileImageUrl = getUserProfileImage(newComment.user)
+
+        populateReplies(newComment)
+
+        return newComment
     }
     //endregion
 

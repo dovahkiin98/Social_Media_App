@@ -89,6 +89,7 @@ import net.inferno.socialmedia.utils.getFilePathFromUri
 import net.inferno.socialmedia.view.BackIconButton
 import net.inferno.socialmedia.view.ErrorView
 import net.inferno.socialmedia.view.LoadingView
+import net.inferno.socialmedia.view.PostAction
 import net.inferno.socialmedia.view.PostItem
 import net.inferno.socialmedia.view.UserImage
 import java.io.File
@@ -162,8 +163,6 @@ fun UserProfileUI(
     var showProfileImageSheet by rememberSaveable { mutableStateOf(false) }
 
     var selectedPost: Post? by remember { mutableStateOf(null) }
-    val postSheetState = rememberModalBottomSheetState()
-    var showPostSheet by rememberSaveable { mutableStateOf(false) }
     var showPostDeletionDialog by rememberSaveable { mutableStateOf(false) }
 
     val showUploadingDialog by remember {
@@ -232,7 +231,8 @@ fun UserProfileUI(
     }
 
     val onBackPressed = {
-        if (lazyListState.layoutInfo.viewportStartOffset == 0) {
+        println(lazyListState.layoutInfo)
+        if (lazyListState.firstVisibleItemIndex == 0 && lazyListState.firstVisibleItemScrollOffset == 0) {
             navController.popBackStack()
         } else {
             coroutineScope.launch {
@@ -468,12 +468,23 @@ fun UserProfileUI(
                                 onImageClick = { image ->
                                     navController.navigate(Routes.image(image.imageUrl!!))
                                 },
-                                onPostLiked = { post ->
+                                onLiked = { post ->
                                     viewModel.likePost(post)
                                 },
-                                onOptionsClicked = { post ->
+                                onOptionsClick = { post, action ->
                                     selectedPost = post
-                                    showPostSheet = true
+
+                                    when (action) {
+                                        PostAction.Delete -> {
+                                            showPostDeletionDialog = true
+                                        }
+                                    }
+                                },
+                                onClick = { post ->
+                                    navController.navigate(Routes.post(post))
+                                },
+                                onUserClick = { user ->
+                                    navController.navigate(Routes.profile(if(currentUser!!.id == user.id) null else user))
                                 },
                                 modifier = Modifier
                                     .padding(vertical = 8.dp)
@@ -635,53 +646,6 @@ fun UserProfileUI(
         }
     }
 
-    if (showPostSheet) {
-        ModalBottomSheet(
-            onDismissRequest = {
-                showPostSheet = false
-            },
-            sheetState = postSheetState,
-        ) {
-            ListItem(
-                leadingContent = {
-                    Icon(
-                        painterResource(id = R.drawable.ic_edit),
-                        contentDescription = null,
-                    )
-                },
-                headlineContent = {
-                    Text(stringResource(id = R.string.edit_post))
-                },
-                modifier = Modifier
-                    .clickable {
-                        coroutineScope.launch {
-                            postSheetState.hide()
-                            showPostSheet = false
-                        }
-                    }
-            )
-            ListItem(
-                leadingContent = {
-                    Icon(
-                        painterResource(id = R.drawable.ic_delete),
-                        contentDescription = null,
-                    )
-                },
-                headlineContent = {
-                    Text(stringResource(id = R.string.delete_post))
-                },
-                modifier = Modifier
-                    .clickable {
-                        coroutineScope.launch {
-                            postSheetState.hide()
-                            showPostDeletionDialog = true
-                            showPostSheet = false
-                        }
-                    }
-            )
-        }
-    }
-
     if (showUploadingDialog) {
         AlertDialog(onDismissRequest = {}) {
             Row {
@@ -726,6 +690,4 @@ fun UserProfileUI(
             }
         )
     }
-
-    println(selectedPost)
 }

@@ -1,5 +1,6 @@
 package net.inferno.socialmedia.data.remote
 
+import net.inferno.socialmedia.model.Comment
 import net.inferno.socialmedia.model.Post
 import net.inferno.socialmedia.model.User
 import net.inferno.socialmedia.model.UserDetails
@@ -72,6 +73,12 @@ interface SocialMediaService {
         @Query("userId") userId: String,
     ): BaseResponse<UserDetails>
 
+    //region Posts
+    @GET("posts")
+    suspend fun getPostDetails(
+        @Query("postId") postId: String,
+    ): BaseResponse<Post>
+
     @FormUrlEncoded
     @PATCH("posts/like")
     suspend fun likePost(
@@ -82,4 +89,15 @@ interface SocialMediaService {
     suspend fun deletePost(
         @Query("postId") postId: String,
     ): BaseResponse<Any>
+
+    @GET("posts/comments")
+    suspend fun getPostComments(
+        @Query("postId") postId: String,
+    ): BaseResponse<List<Comment>>
+
+    @PATCH("comments/likes")
+    suspend fun likeComment(
+        @Body body: Map<String, String>,
+    ): BaseResponse<Comment>
+    //endregion
 }

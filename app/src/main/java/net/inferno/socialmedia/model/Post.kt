@@ -20,18 +20,18 @@ data class Post(
     val files: List<PostImage> = listOf(),
 
     @Json(name = "likes")
-    val likes: MutableList<String> = mutableListOf(),
+    val likes: List<String> = listOf(),
 
     @Json(name = "comments")
     val comments: List<String> = listOf(),
 
     @DateString
     @Json(name = "createdAt")
-    val createdAt: LocalDateTime?,
+    val createdAt: LocalDateTime? = null,
 
     @DateString
     @Json(name = "updatedAt")
-    val updatedAt: LocalDateTime?,
+    val updatedAt: LocalDateTime? = null,
 ) {
     @JsonClass(generateAdapter = true)
     class PostImage(
@@ -48,4 +48,6 @@ data class Post(
         is Post -> this.id == other.id
         else -> false
     }
+
+    override fun hashCode() = id.toInt()
 }

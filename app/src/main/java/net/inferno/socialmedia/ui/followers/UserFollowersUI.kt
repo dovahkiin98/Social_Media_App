@@ -164,8 +164,7 @@ fun UserFollowersUI(
                         .padding(top = paddingValues.calculateTopPadding()),
                 )
             }
-        } else if (
-            uiState is UIState.Failure) {
+        } else if (uiState is UIState.Failure) {
             ErrorView(uiState.error!!) {
                 onRetry()
             }

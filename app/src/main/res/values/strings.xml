@@ -82,4 +82,11 @@
     <string name="edit_post">Edit Post</string>
     <string name="delete_post">Delete Post</string>
     <string name="delete_post_message">Are you sure you want to delete this post?</string>
+    <string name="edit_comment">Edit Comment</string>
+    <string name="delete_comment">Delete Comment</string>
+
+    <string name="copy_comment">Copy Comment</string>
+    <string name="post_copied">Post copied to clipboard</string>
+    <string name="comment_copied">Comment copied to clipboard</string>
+    <string name="reply">Reply</string>
 </resources>

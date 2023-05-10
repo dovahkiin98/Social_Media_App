@@ -55,6 +55,11 @@ class RemoteDataSource @Inject constructor(
         userId: String,
     ) = remoteService.toggleFollow(userId)
 
+    //region Posts
+    override suspend fun getPostDetails(
+        postId: String,
+    ) = remoteService.getPostDetails(postId)
+
     override suspend fun likePost(
         postId: String,
     ) = remoteService.likePost(postId)
@@ -62,4 +67,13 @@ class RemoteDataSource @Inject constructor(
     override suspend fun deletePost(
         postId: String,
     ) = remoteService.deletePost(postId)
+
+    override suspend fun getPostComments(
+        postId: String,
+    ) = remoteService.getPostComments(postId)
+
+    override suspend fun likeComment(
+        body: Map<String, String,>
+    ) = remoteService.likeComment(body)
+    //endregion
 }

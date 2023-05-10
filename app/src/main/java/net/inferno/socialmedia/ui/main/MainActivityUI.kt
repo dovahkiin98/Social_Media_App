@@ -15,6 +15,8 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import net.inferno.socialmedia.data.PreferencesDataStore
+import net.inferno.socialmedia.model.DummyUser
+import net.inferno.socialmedia.model.Post
 import net.inferno.socialmedia.model.User
 import net.inferno.socialmedia.ui.apps.AppsUI
 import net.inferno.socialmedia.ui.editProfile.EditProfileUI
@@ -23,6 +25,7 @@ import net.inferno.socialmedia.ui.followes.UserFollowesUI
 import net.inferno.socialmedia.ui.home.HomeUI
 import net.inferno.socialmedia.ui.image.ImageUI
 import net.inferno.socialmedia.ui.login.LoginUI
+import net.inferno.socialmedia.ui.post.PostDetailsUI
 import net.inferno.socialmedia.ui.profile.UserProfileUI
 import net.inferno.socialmedia.ui.register.RegisterUI
 
@@ -40,10 +43,24 @@ fun MainActivityUI() {
     val start = if (preferences.isUserLoggedIn) Routes.HOME else Routes.LOGIN
 
     var navigated by rememberSaveable { mutableStateOf(false) }
+//    if (preferences.isUserLoggedIn && !navigated) {
+//        navigated = true
+//        LaunchedEffect(Unit) {
+//            navController.navigate(Routes.profile(null))
+//        }
+//    }
     if (preferences.isUserLoggedIn && !navigated) {
         navigated = true
         LaunchedEffect(Unit) {
-            navController.navigate(Routes.profile(null))
+            navController.navigate(
+                Routes.post(
+                    Post(
+                        id = "64577377aed9af62b96ec8e1",
+                        content = "",
+                        publisher = DummyUser,
+                    )
+                )
+            )
         }
     }
 
@@ -104,6 +121,15 @@ fun MainActivityUI() {
         }
 
         composable(
+            "${Routes.POST}?postId={postId}",
+            arguments = listOf(navArgument("postId") {
+                type = NavType.StringType
+            }),
+        ) {
+            PostDetailsUI(navController = navController)
+        }
+
+        composable(
             "${Routes.IMAGE}?imageUrl={imageUrl}",
             arguments = listOf(navArgument("imageUrl") {
                 type = NavType.StringType
@@ -131,6 +157,8 @@ object Routes {
     const val EDIT_PROFILE = "user/profile/edit"
     const val USER_FOLLOWERS = "user/followers"
     const val USER_FOLLOWINGS = "user/followings"
+
+    const val POST = "post"
 
     const val IMAGE = "image"
 
@@ -163,6 +191,14 @@ object Routes {
         if (user != null) {
             uri.appendQueryParameter("userId", user.id)
         }
+
+        return uri.toString()
+    }
+
+    fun post(post: Post): String {
+        val uri = Uri.Builder()
+            .path(POST)
+            .appendQueryParameter("postId", post.id)
 
         return uri.toString()
     }
