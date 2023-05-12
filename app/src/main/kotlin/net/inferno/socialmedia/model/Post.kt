@@ -50,4 +50,6 @@ data class Post(
     }
 
     override fun hashCode() = id.toInt()
+
+    override fun toString() = "Post($id, $content)"
 }

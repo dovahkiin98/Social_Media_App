@@ -24,7 +24,7 @@ fun BackIconButton(
         IconButton(
             onClick = onClick,
             modifier = modifier
-                .tooltipAnchor()
+                .tooltipTrigger()
         ) {
             Icon(
                 Icons.Default.ArrowBack,

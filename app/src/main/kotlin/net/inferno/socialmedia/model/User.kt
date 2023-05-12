@@ -22,4 +22,6 @@ open class User(
 ) {
     var profileImageUrl: String? = null
     var coverImageUrl: String? = null
+
+    override fun toString() = "User(${id}, $firstName $lastName)"
 }

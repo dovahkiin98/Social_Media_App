@@ -39,6 +39,10 @@
             android:name="com.theartofdev.edmodo.cropper.CropImageActivity"
             android:theme="@style/Theme.Material3.DayNight" />
 
+        <activity
+            android:name=".ui.cropImage.CropImageActivity"
+            android:theme="@style/Theme.SocialMedia" />
+
         <property
             android:name="android.adservices.AD_SERVICES_CONFIG"
             android:resource="@xml/ad_services_config" />

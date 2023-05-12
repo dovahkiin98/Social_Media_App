@@ -27,6 +27,7 @@ import androidx.compose.material3.ListItem
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SelectableDates
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
@@ -93,7 +94,16 @@ fun EditProfileUI(
     val datePickerState = rememberDatePickerState(
         initialSelectedDateMillis = Calendar.getInstance().apply {
             add(Calendar.YEAR, -1)
-        }.timeInMillis
+        }.timeInMillis,
+        selectableDates = object : SelectableDates {
+            override fun isSelectableDate(utcTimeMillis: Long): Boolean {
+                val timeNow = Calendar.getInstance().apply {
+                    add(Calendar.YEAR, -1)
+                }
+
+                return utcTimeMillis < timeNow.timeInMillis
+            }
+        },
     )
 
     var isGenderMenuExpanded by remember { mutableStateOf(false) }
@@ -335,13 +345,6 @@ fun EditProfileUI(
                 ) {
                     DatePicker(
                         state = datePickerState,
-                        dateValidator = {
-                            val timeNow = Calendar.getInstance().apply {
-                                add(Calendar.YEAR, -1)
-                            }
-
-                            it < timeNow.timeInMillis
-                        },
                     )
                 }
             }

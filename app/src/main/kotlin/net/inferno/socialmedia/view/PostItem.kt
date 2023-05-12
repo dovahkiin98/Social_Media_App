@@ -15,6 +15,7 @@ import androidx.compose.foundation.layout.requiredHeightIn
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.pager.HorizontalPager
+import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material3.ButtonDefaults
@@ -32,6 +33,7 @@ import androidx.compose.material3.TextButton
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -57,7 +59,6 @@ import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import kotlinx.coroutines.launch
 import net.inferno.socialmedia.R
-import net.inferno.socialmedia.model.Comment
 import net.inferno.socialmedia.model.Post
 import net.inferno.socialmedia.model.User
 import net.inferno.socialmedia.utils.toReadableText
@@ -82,8 +83,8 @@ fun PostItem(
     val coroutineScope = rememberCoroutineScope()
 
     var contentExpanded by remember { mutableStateOf(false) }
-    val postLiked = post.likes.contains(currentUserId)
-    val likes = post.likes
+    val likes = remember { mutableStateListOf(*post.likes.toTypedArray()) }
+    val postLiked = likes.contains(currentUserId)
 
     val postSheetState = rememberModalBottomSheetState()
     var showPostSheet by rememberSaveable { mutableStateOf(false) }
@@ -186,7 +187,7 @@ fun PostItem(
 
         if (post.files.isNotEmpty()) {
             HorizontalPager(
-                pageCount = post.files.size,
+                state = rememberPagerState { post.files.size },
                 modifier = Modifier
                     .requiredHeightIn(max = 500.dp)
                     .fillMaxWidth()
@@ -256,6 +257,12 @@ fun PostItem(
         Row {
             TextButton(
                 onClick = {
+                    if (likes.contains(currentUserId)) {
+                        likes.remove(currentUserId)
+                    } else {
+                        likes.add(currentUserId)
+                    }
+
                     onLiked(post)
                 },
                 colors = ButtonDefaults.textButtonColors(

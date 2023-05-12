@@ -29,6 +29,7 @@ import androidx.compose.material3.TextButton
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -75,7 +76,8 @@ fun CommentItem(
     val clipboardManager = LocalClipboardManager.current
     val coroutineScope = rememberCoroutineScope()
 
-    val commentLiked = comment.likes.contains(currentUserId)
+    val likes = remember { mutableStateListOf(*comment.likes.toTypedArray()) }
+    val commentLiked = likes.contains(currentUserId)
 
     var contentExpanded by remember { mutableStateOf(false) }
 
@@ -190,6 +192,12 @@ fun CommentItem(
                     ) {
                         TextButton(
                             onClick = {
+                                if(likes.contains(currentUserId)) {
+                                    likes.remove(currentUserId)
+                                } else {
+                                    likes.add(currentUserId)
+                                }
+
                                 onLiked(comment)
                             },
                             colors = ButtonDefaults.textButtonColors(

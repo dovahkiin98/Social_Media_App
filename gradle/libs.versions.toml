@@ -1,24 +1,24 @@
 [versions]
-gradle = "8.2.0-alpha02"
+gradle = "8.2.0-alpha03"
 
 kotlin = "1.8.21"
 coRoutines = "1.6.4"
 serialization = "1.4.1"
 
-core = "1.11.0-alpha03"
+core = "1.11.0-alpha04"
 appCompat = "1.7.0-alpha02"
 activity = "1.7.1"
 lifecycle = "2.6.1"
-navigation = "2.6.0-beta01"
+navigation = "2.6.0-rc01"
 room = "2.5.1"
 
 preferences = "1.2.0"
 datastore = "1.1.0-alpha04"
 
-materialComponents = "1.9.0-beta01"
+materialComponents = "1.9.0"
 
-compose = "1.5.0-alpha03"
-accompanist = "0.31.1-alpha"
+compose = "1.5.0-alpha04"
+accompanist = "0.31.2-alpha"
 
 okhttp = "5.0.0-alpha.11"
 retrofit = "2.9.0"
@@ -27,9 +27,9 @@ moshi = "1.14.0"
 hilt = "2.45"
 androidx-hilt = "1.0.0"
 
-privacysandbox-ads = "1.0.0-beta03"
+privacysandbox-ads = "1.0.0-beta04"
 privacysandbox-ui = "1.0.0-alpha02"
-privacysandbox-sdkruntime = "1.0.0-alpha03"
+privacysandbox-sdkruntime = "1.0.0-alpha04"
 privacysandbox-tools = "1.0.0-alpha03"
 
 junit = "4.13.2"
@@ -71,7 +71,7 @@ androidx-compose-material = { module = "androidx.compose.material:material", ver
 androidx-compose-runtime = { module = "androidx.compose.runtime:runtime", version.ref = "compose" }
 androidx-compose-runtime-livedata = { module = "androidx.compose.runtime:runtime-livedata", version.ref = "compose" }
 
-androidx-compose-material3 = "androidx.compose.material3:material3:1.1.0-rc01"
+androidx-compose-material3 = "androidx.compose.material3:material3:1.2.0-alpha01"
 
 google-accompanist-flowlayout = { module = "com.google.accompanist:accompanist-flowlayout", version.ref = "accompanist" }
 google-accompanist-swiperefresh = { module = "com.google.accompanist:accompanist-swiperefresh", version.ref = "accompanist" }
@@ -111,7 +111,6 @@ androidx-privacysandbox-sdkruntime-client = { module = "androidx.privacysandbox.
 androidx-privacysandbox-tools = { module = "androidx.privacysandbox.tools:tools", version.ref = "privacysandbox-tools" }
 androidx-privacysandbox-tools-datasource = { module = "androidx.privacysandbox.tools:tools-complications-data-source-ktx", version.ref = "privacysandbox-tools" }
 
-jsoup = "org.jsoup:jsoup:1.15.4"
 desugar-jdk-libs = "com.android.tools:desugar_jdk_libs:2.0.3"
 junit = { group = "junit", name = "junit", version.ref = "junit" }
 androidx-test-ext-junit = { group = "androidx.test.ext", name = "junit", version.ref = "androidx-test-ext-junit" }

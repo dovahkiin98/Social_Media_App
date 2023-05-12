@@ -23,7 +23,7 @@ android {
         }
     }
 
-    buildToolsVersion = "34.0.0-rc03"
+    buildToolsVersion = "34.0.0-rc04"
     compileSdk = 33
     compileSdkExtension = 4
 
@@ -31,7 +31,7 @@ android {
         applicationId = "net.inferno.socialmedia"
 
         minSdk = 24
-        targetSdk = 33
+        compileSdk = 33
 
         versionCode = 1
         versionName = "1.0"

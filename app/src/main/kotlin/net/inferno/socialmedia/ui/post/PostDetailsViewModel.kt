@@ -141,7 +141,7 @@ class PostDetailsViewModel @Inject constructor(
         val replies = originalComment.replies.toMutableList()
         val index = replies.indexOf(newComment)
 
-        if(index > 0) {
+        if(index >= 0) {
             replies[index] = newComment
         } else {
            replies.forEachIndexed { i, comment ->

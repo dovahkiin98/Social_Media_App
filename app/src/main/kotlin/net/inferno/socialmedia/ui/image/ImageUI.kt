@@ -32,6 +32,7 @@ import coil.ImageLoader
 import coil.imageLoader
 import coil.request.ImageRequest
 import com.ortiz.touchview.TouchImageView
+import net.inferno.socialmedia.theme.SocialMediaTheme
 import net.inferno.socialmedia.view.BackIconButton
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -40,35 +41,37 @@ fun ImageUI(
     navController: NavController,
     imageUrl: String,
 ) {
-    Scaffold(
-        containerColor = Color.Black,
-        contentWindowInsets = WindowInsets.navigationBars,
-    ) { paddingValues ->
-        Box(
-            modifier = Modifier
-                .padding(paddingValues)
-        ) {
-            ZoomableImage(
-                imageUrl,
+    SocialMediaTheme(darkTheme = true) {
+        Scaffold(
+            containerColor = Color.Black,
+            contentWindowInsets = WindowInsets.navigationBars,
+        ) { paddingValues ->
+            Box(
                 modifier = Modifier
-                    .fillMaxSize()
-            )
+                    .padding(paddingValues)
+            ) {
+                ZoomableImage(
+                    imageUrl,
+                    modifier = Modifier
+                        .fillMaxSize()
+                )
 
-            TopAppBar(
-                title = {},
-                navigationIcon = {
-                    CompositionLocalProvider(
-                        LocalContentColor provides Color.White
-                    ) {
-                        BackIconButton {
-                            navController.popBackStack()
+                TopAppBar(
+                    title = {},
+                    navigationIcon = {
+                        CompositionLocalProvider(
+                            LocalContentColor provides Color.White
+                        ) {
+                            BackIconButton {
+                                navController.popBackStack()
+                            }
                         }
-                    }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = Color.Black.copy(alpha = 0.2f),
-                ),
-            )
+                    },
+                    colors = TopAppBarDefaults.topAppBarColors(
+                        containerColor = Color.Black.copy(alpha = 0.2f),
+                    ),
+                )
+            }
         }
     }
 }

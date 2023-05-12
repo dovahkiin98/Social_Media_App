@@ -89,4 +89,6 @@
     <string name="post_copied">Post copied to clipboard</string>
     <string name="comment_copied">Comment copied to clipboard</string>
     <string name="reply">Reply</string>
+    <string name="crop">Crop</string>
+    <string name="add_comment">Add a comment</string>
 </resources>

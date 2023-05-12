@@ -36,6 +36,7 @@ import androidx.compose.material3.ListItem
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SelectableDates
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TextFieldDefaults
@@ -87,7 +88,16 @@ fun RegisterPhase2(
     val datePickerState = rememberDatePickerState(
         initialSelectedDateMillis = Calendar.getInstance().apply {
             add(Calendar.YEAR, -1)
-        }.timeInMillis
+        }.timeInMillis,
+        selectableDates = object : SelectableDates {
+            override fun isSelectableDate(utcTimeMillis: Long): Boolean {
+                val timeNow = Calendar.getInstance().apply {
+                    add(Calendar.YEAR, -1)
+                }
+
+                return utcTimeMillis < timeNow.timeInMillis
+            }
+        },
     )
 
     var isGenderMenuExpanded by remember { mutableStateOf(false) }
@@ -355,13 +365,6 @@ fun RegisterPhase2(
             ) {
                 DatePicker(
                     state = datePickerState,
-                    dateValidator = {
-                        val timeNow = Calendar.getInstance().apply {
-                            add(Calendar.YEAR, -1)
-                        }
-
-                        it < timeNow.timeInMillis
-                    },
                 )
             }
         }

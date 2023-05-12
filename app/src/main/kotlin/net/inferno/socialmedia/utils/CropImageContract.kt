@@ -23,11 +23,11 @@ import java.util.Date
 import java.util.Locale
 
 class CropImageContract :
-    ActivityResultContract<CropImage.ActivityBuilder, CropImageView.CropResult?>() {
+    ActivityResultContract<Intent, CropImageView.CropResult?>() {
     override fun createIntent(
         context: Context,
-        input: CropImage.ActivityBuilder,
-    ): Intent = input.getIntent(context)
+        input: Intent
+    ): Intent = input
 
     override fun parseResult(
         resultCode: Int,
@@ -37,7 +37,7 @@ class CropImageContract :
             IntentCompat.getParcelableExtra(
                 intent,
                 CropImage.CROP_IMAGE_EXTRA_RESULT,
-                CropImage.ActivityResult::class.java
+                CropImage.ActivityResult::class.java,
             )
         } else null
 

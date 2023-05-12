@@ -10,7 +10,9 @@ data class UserImage(
 
     @Json(name = "imageName")
     val name: String,
-)
+) {
+    override fun toString() = name
+}
 
 @JsonClass(generateAdapter = true)
 data class ImageStyle(

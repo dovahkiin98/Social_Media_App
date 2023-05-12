@@ -1,6 +1,8 @@
 package net.inferno.socialmedia.ui.profile
 
+import android.content.Intent
 import android.graphics.drawable.ColorDrawable
+import android.os.Bundle
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
@@ -79,10 +81,12 @@ import androidx.navigation.NavController
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import com.theartofdev.edmodo.cropper.CropImage
+import com.theartofdev.edmodo.cropper.CropImageOptions
 import kotlinx.coroutines.launch
 import net.inferno.socialmedia.R
 import net.inferno.socialmedia.model.Post
 import net.inferno.socialmedia.model.UIState
+import net.inferno.socialmedia.ui.cropImage.CropImageActivity
 import net.inferno.socialmedia.ui.main.Routes
 import net.inferno.socialmedia.utils.CropImageContract
 import net.inferno.socialmedia.utils.getFilePathFromUri
@@ -130,12 +134,21 @@ fun UserProfileUI(
         ActivityResultContracts.PickVisualMedia(),
     ) {
         if (it != null) {
-            val cropImageIntent = CropImage.activity(it)
+            val cropImageOptions = CropImageOptions()
 
             if (viewModel.imageType == "cover") {
-                cropImageIntent.setAspectRatio(16, 9)
+                cropImageOptions.aspectRatioX = 16
+                cropImageOptions.aspectRatioY = 9
             } else {
-                cropImageIntent.setAspectRatio(1, 1)
+                cropImageOptions.aspectRatioX = 1
+                cropImageOptions.aspectRatioY = 1
+            }
+
+            val cropImageIntent = Intent(context, CropImageActivity::class.java).apply {
+                val bundle = Bundle()
+                bundle.putParcelable(CropImage.CROP_IMAGE_EXTRA_SOURCE, it)
+                bundle.putParcelable(CropImage.CROP_IMAGE_EXTRA_OPTIONS, cropImageOptions)
+                putExtra(CropImage.CROP_IMAGE_EXTRA_BUNDLE, bundle)
             }
 
             cropImageLauncher.launch(cropImageIntent)

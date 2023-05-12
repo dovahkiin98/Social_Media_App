@@ -42,4 +42,6 @@ data class Comment(
     }
 
     override fun hashCode() = id.toInt()
+
+    override fun toString() = "Comment($id, $content)"
 }
