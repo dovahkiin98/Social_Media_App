@@ -90,5 +90,20 @@
     <string name="comment_copied">Comment copied to clipboard</string>
     <string name="reply">Reply</string>
     <string name="crop">Crop</string>
-    <string name="add_comment">Add a comment</string>
+    <string name="add_comment">Add comment</string>
+    <string name="post">Post</string>
+    <string name="post_comment">Post</string>
+    <string name="add_reply">Add Reply</string>
+    <string name="your_comment">Your comment</string>
+    <string name="your_reply">Your reply</string>
+    <string name="discard">Discard</string>
+    <string name="discard_comment_title">Discard Comment</string>
+    <string name="discard_comment_message">Are you sure you want to discard this comment?</string>
+    <string name="discard_post_title">Discard Post</string>
+    <string name="discard_post_message">Are you sure you want to discard this post?</string>
+    <string name="discard_post_changes_message">Are you sure you want to discard this post?</string>
+    <string name="save_comment">Save</string>
+    <string name="create_post">Create Post</string>
+    <string name="post_text">Post text</string>
+    <string name="new_post">New Post</string>
 </resources>

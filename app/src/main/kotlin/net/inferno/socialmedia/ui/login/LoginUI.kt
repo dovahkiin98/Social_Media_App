@@ -193,7 +193,7 @@ fun LoginUI(
         scrollState = scrollState,
         onLogin = login,
         onResetPassword = {
-            navController.navigate(Routes.RESET_PASSWORD)
+//            navController.navigate(Routes.RESET_PASSWORD)
         },
         onRegister = {
             navController.navigate(Routes.REGISTER)

@@ -37,7 +37,7 @@ class EditProfileViewModel @Inject constructor(
 
     init {
         viewModelScope.launch {
-            val userData = repository.getSavedUserFlow().first()
+            val userData = repository.getSavedUserFlow().first()!!
 
             firstNameValue.value = userData.firstName
             lastNameValue.value = userData.lastName

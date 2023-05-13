@@ -31,7 +31,7 @@ android {
         applicationId = "net.inferno.socialmedia"
 
         minSdk = 24
-        compileSdk = 33
+        targetSdk = 33
 
         versionCode = 1
         versionName = "1.0"
@@ -192,4 +192,7 @@ dependencies {
 //    implementation(libs.androidx.privacysandbox.tools.datasource)
     //endregion
 
+    //region Third Party
+    implementation(libs.bundles.commonmark)
+    //endregion
 }

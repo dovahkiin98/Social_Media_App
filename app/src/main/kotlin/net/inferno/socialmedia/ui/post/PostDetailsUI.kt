@@ -8,7 +8,6 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.gestures.detectTapGestures
-import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -28,7 +27,6 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
-import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.KeyboardArrowDown
@@ -48,7 +46,6 @@ import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
@@ -82,7 +79,6 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
@@ -96,6 +92,7 @@ import net.inferno.socialmedia.utils.toReadableText
 import net.inferno.socialmedia.view.BackIconButton
 import net.inferno.socialmedia.view.ErrorView
 import net.inferno.socialmedia.view.LoadingView
+import net.inferno.socialmedia.view.MDDocument
 import net.inferno.socialmedia.view.UserImage
 
 @OptIn(
@@ -153,6 +150,9 @@ fun PostDetailsUI(
                         navController.popBackStack()
                     }
                 },
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = MaterialTheme.colorScheme.surfaceVariant,
+                ),
                 scrollBehavior = topAppBarScrollBehavior,
                 modifier = Modifier
                     .pointerInput(Unit) {
@@ -194,9 +194,11 @@ fun PostDetailsUI(
                     ) {
                         item {
                             Box(
-                                modifier = Modifier.background(
-                                    MaterialTheme.colorScheme.surfaceColorAtElevation(1.dp)
-                                )
+                                modifier = Modifier
+                                    .padding(top = 16.dp)
+                                    .background(
+                                        MaterialTheme.colorScheme.surfaceColorAtElevation(1.dp)
+                                    )
                             ) {
                                 Column {
                                     Row(
@@ -210,7 +212,8 @@ fun PostDetailsUI(
                                         UserImage(
                                             onClick = {
 
-                                            }, modifier = Modifier.size(48.dp)
+                                            },
+                                            modifier = Modifier.size(48.dp)
                                         ) {
                                             AsyncImage(
                                                 model = ImageRequest.Builder(LocalContext.current)
@@ -263,10 +266,8 @@ fun PostDetailsUI(
                                     }
 
                                     if (post.content.isNotBlank()) {
-                                        Text(
+                                        MDDocument(
                                             post.content,
-                                            maxLines = if (contentExpanded) Int.MAX_VALUE else 3,
-                                            overflow = if (contentExpanded) TextOverflow.Clip else TextOverflow.Ellipsis,
                                             modifier = Modifier
                                                 .animateContentSize()
                                                 .fillMaxWidth()
@@ -389,7 +390,7 @@ fun PostDetailsUI(
 
                                         TextButton(
                                             onClick = {
-
+                                                navController.navigate(Routes.addComment(post))
                                             },
                                             colors = ButtonDefaults.textButtonColors(
                                                 contentColor = MaterialTheme.colorScheme.onSurfaceVariant
@@ -413,15 +414,28 @@ fun PostDetailsUI(
                         }
 
                         if (commentsState.data != null) {
-                            items(commentsState.data!!, key = { it.id }) { comment ->
+                            items(commentsState.data!!, key = { it.id }) { item ->
                                 CommentItem(
-                                    comment = comment,
+                                    comment = item,
                                     currentUserId = currentUserId,
+                                    opId = post.publisher.id,
                                     onUserClick = { user ->
                                         navController.navigate(Routes.profile(if (currentUser!!.id == user.id) null else user))
                                     },
-                                    onLiked = {
-                                        viewModel.likeComment(it)
+                                    onLiked = { comment ->
+                                        viewModel.likeComment(comment)
+                                    },
+                                    onReply = { comment ->
+                                        navController.navigate(Routes.addComment(comment = comment))
+                                    },
+                                    onOptionsClick = { comment, action ->
+                                        when (action) {
+                                            CommentAction.Edit -> {
+                                                navController.navigate(Routes.editComment(comment = comment))
+                                            }
+
+                                            CommentAction.Delete -> TODO()
+                                        }
                                     },
                                     modifier = Modifier
                                         .padding(vertical = 8.dp)
@@ -460,7 +474,7 @@ fun PostDetailsUI(
                     modifier = Modifier
                         .fillMaxWidth()
                         .background(
-                            MaterialTheme.colorScheme.surfaceColorAtElevation(3.dp),
+                            MaterialTheme.colorScheme.surfaceVariant,
                         )
                         .padding(
                             bottom = paddingValues.calculateBottomPadding(),
@@ -473,7 +487,7 @@ fun PostDetailsUI(
                             modifier = Modifier
                                 .pointerInput(Unit) {
                                     detectTapGestures {
-
+                                        navController.navigate(Routes.addComment(post))
                                     }
                                 }
                                 .padding(16.dp)
@@ -524,12 +538,14 @@ fun PostDetailsUI(
                     Text(stringResource(id = R.string.edit_post))
                 },
                 modifier = Modifier.clickable {
+                    showPostSheet = false
+
                     coroutineScope.launch {
                         postSheetState.hide()
-                        showPostSheet = false
                     }
-                }
 
+                    navController.navigate(Routes.addPost(postState.data!!))
+                }
             )
             ListItem(
                 leadingContent = {

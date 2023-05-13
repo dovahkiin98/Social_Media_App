@@ -4,8 +4,11 @@ import android.content.SharedPreferences
 import androidx.core.content.edit
 import androidx.core.net.toUri
 import com.squareup.moshi.Moshi
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.withContext
+import kotlinx.coroutines.withTimeout
 import net.inferno.socialmedia.data.remote.RemoteDataSource
 import net.inferno.socialmedia.model.Comment
 import net.inferno.socialmedia.model.Post
@@ -17,6 +20,7 @@ import net.inferno.socialmedia.model.response.BaseResponse
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.MultipartBody
 import okhttp3.RequestBody.Companion.asRequestBody
+import okhttp3.RequestBody.Companion.toRequestBody
 import java.io.File
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -68,7 +72,11 @@ class Repository @Inject constructor(
     }
 
     fun getSavedUserFlow() = preferencesDataStore.savedUser.map {
-        moshi.adapter(UserDetails::class.java).fromJson(it)!!
+        if (it != null) {
+            moshi.adapter(UserDetails::class.java).fromJson(it)!!
+        } else {
+            null
+        }
     }
 
     suspend fun getSavedUser() = getSavedUserFlow().first()
@@ -84,7 +92,8 @@ class Repository @Inject constructor(
     }
 
     suspend fun getUserDetails(userId: String? = null): UserDetails {
-        val savedUser = getSavedUser()
+        val savedUser = getSavedUser()!!
+
         val response = makeRequest {
             remoteDataSource.getUser(userId ?: savedUser.id)
         }
@@ -101,7 +110,7 @@ class Repository @Inject constructor(
     }
 
     suspend fun getUserPosts(userId: String? = null): List<Post> {
-        val savedUser = getSavedUser()
+        val savedUser = getSavedUser()!!
 
         val response = makeRequest {
             remoteDataSource.getUserPosts(userId ?: savedUser.id)
@@ -121,7 +130,7 @@ class Repository @Inject constructor(
     suspend fun uploadProfileImage(
         croppedImage: File,
     ): UserDetails {
-        val savedUser = getSavedUser()
+        val savedUser = getSavedUser()!!
 
         val fileBody = croppedImage.asRequestBody("image/*".toMediaType())
         val filePart = MultipartBody.Part.createFormData(
@@ -152,7 +161,7 @@ class Repository @Inject constructor(
     suspend fun uploadCoverImage(
         croppedImage: File,
     ): UserDetails {
-        val savedUser = getSavedUser()
+        val savedUser = getSavedUser()!!
 
         val fileBody = croppedImage.asRequestBody("image/*".toMediaType())
         val filePart = MultipartBody.Part.createFormData(
@@ -181,7 +190,7 @@ class Repository @Inject constructor(
     }
 
     suspend fun getUserFollowers(userId: String?): List<User> {
-        val savedUser = getSavedUser()
+        val savedUser = getSavedUser()!!
         val response = makeRequest {
             remoteDataSource.getFollowers(userId ?: savedUser.id)
         }
@@ -195,7 +204,8 @@ class Repository @Inject constructor(
     }
 
     suspend fun getUserFollowings(userId: String?): List<User> {
-        val savedUser = getSavedUser()
+        val savedUser = getSavedUser()!!
+
         val response = makeRequest {
             remoteDataSource.getFollowing(userId ?: savedUser.id)
         }
@@ -209,7 +219,8 @@ class Repository @Inject constructor(
     }
 
     suspend fun toggleFollow(user: User) {
-        val savedUser = getSavedUser()
+        val savedUser = getSavedUser()!!
+
         val response = makeRequest {
             remoteDataSource.toggleFollow(user.id)
         }
@@ -249,20 +260,18 @@ class Repository @Inject constructor(
         return post
     }
 
-    suspend fun getPostComments(postId: String): List<Comment> {
+    suspend fun getCommentDetails(commentId: String): Comment {
         val response = makeRequest {
-            remoteDataSource.getPostComments(postId)
+            remoteDataSource.getCommentDetails(commentId)
         }
 
-        val comments = response.data!!
+        val comment = response.data!!
 
-        for (comment in comments) {
-            comment.user.profileImageUrl = getUserProfileImage(comment.user)
+        comment.user.profileImageUrl = getUserProfileImage(comment.user)
 
-            populateReplies(comment)
-        }
+        populateReplies(comment)
 
-        return comments
+        return comment
     }
 
     private fun populateReplies(comment: Comment) {
@@ -296,6 +305,69 @@ class Repository @Inject constructor(
         }
     }
 
+    suspend fun createPost(
+        content: String,
+        image: File?,
+    ): Post {
+        val filePart = if (image != null) {
+            val body = image.asRequestBody("image/*".toMediaType())
+            MultipartBody.Part.createFormData(
+                "image",
+                image.name,
+                body,
+            )
+        } else null
+
+        val contentPart = MultipartBody.Part.createFormData(
+            "describtion",
+            content,
+        )
+
+        val response = makeRequest {
+            remoteDataSource.createPost(
+                content = contentPart,
+                image = filePart,
+            )
+        }
+
+        val newPost = response.data!!
+
+        newPost.publisher.profileImageUrl = getUserProfileImage(newPost.publisher)
+
+        return newPost
+    }
+
+    suspend fun updatePost(
+        post: Post,
+    ): Post {
+        val response = makeRequest {
+            remoteDataSource.updatePost(post.id, post.content)
+        }
+
+        val newPost = response.data!!
+
+        newPost.publisher.profileImageUrl = getUserProfileImage(newPost.publisher)
+
+        return newPost
+    }
+    //endregion
+
+    //region Comment
+    suspend fun getPostComments(postId: String): List<Comment> {
+        val response = makeRequest {
+            remoteDataSource.getPostComments(postId)
+        }
+
+        val comments = response.data!!
+
+        for (comment in comments) {
+            comment.user.profileImageUrl = getUserProfileImage(comment.user)
+
+            populateReplies(comment)
+        }
+
+        return comments
+    }
 
     suspend fun likeComment(comment: Comment): Comment {
         val response = makeRequest {
@@ -313,6 +385,42 @@ class Repository @Inject constructor(
         newComment.user.profileImageUrl = getUserProfileImage(newComment.user)
 
         populateReplies(newComment)
+
+        return newComment
+    }
+
+    suspend fun createComment(
+        postId: String,
+        content: String,
+        commentId: String?,
+    ): Comment {
+        val response = makeRequest {
+            remoteDataSource.createComment(
+                mapOf(
+                    "postId" to postId,
+                    "content" to content,
+                    "repliedCommentId" to commentId,
+                )
+            )
+        }
+
+        val newComment = response.data!!
+
+        newComment.user.profileImageUrl = getUserProfileImage(newComment.user)
+
+        return newComment
+    }
+
+    suspend fun updateComment(
+        comment: Comment,
+    ): Comment {
+        val response = makeRequest {
+            remoteDataSource.updateComment(comment.id, comment.toJson())
+        }
+
+        val newComment = response.data!!
+
+        newComment.user.profileImageUrl = getUserProfileImage(newComment.user)
 
         return newComment
     }
@@ -378,7 +486,11 @@ class Repository @Inject constructor(
     }
 
     private suspend fun <T : BaseResponse<*>> makeRequest(request: suspend () -> T): T {
-        val response = request()
+        val response = withTimeout(TIMEOUT) {
+            withContext(Dispatchers.IO) {
+                request()
+            }
+        }
 
         if (!response.success) {
             throw Exception(response.error)

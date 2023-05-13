@@ -13,9 +13,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.view.WindowCompat
@@ -127,12 +125,16 @@ class CropImageActivity : ComponentActivity() {
 
         if (outputUri == null || outputUri == Uri.EMPTY) {
             outputUri = try {
-                val ext =
-                    if (options.outputCompressFormat == Bitmap.CompressFormat.JPEG) ".jpg" else if (options.outputCompressFormat == Bitmap.CompressFormat.PNG) ".png" else ".webp"
+                val ext = when (options.outputCompressFormat) {
+                    Bitmap.CompressFormat.JPEG -> ".jpg"
+                    Bitmap.CompressFormat.PNG -> ".png"
+                    else -> ".webp"
+                }
+
                 Uri.fromFile(
                     File.createTempFile(
                         "cropped", ext,
-                        cacheDir
+                        cacheDir,
                     )
                 )
             } catch (e: IOException) {

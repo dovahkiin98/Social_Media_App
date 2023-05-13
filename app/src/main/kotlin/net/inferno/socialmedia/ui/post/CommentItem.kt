@@ -47,7 +47,6 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
@@ -56,6 +55,7 @@ import net.inferno.socialmedia.R
 import net.inferno.socialmedia.model.Comment
 import net.inferno.socialmedia.model.User
 import net.inferno.socialmedia.utils.toReadableText
+import net.inferno.socialmedia.view.MDDocument
 import net.inferno.socialmedia.view.UserImage
 
 @OptIn(
@@ -66,9 +66,11 @@ import net.inferno.socialmedia.view.UserImage
 fun CommentItem(
     comment: Comment,
     currentUserId: String,
+    opId: String,
     modifier: Modifier = Modifier,
-    isReply: Boolean = false,
+    level: Int = 0,
     onLiked: (Comment) -> Unit = {},
+    onReply: (Comment) -> Unit = {},
     onUserClick: (User) -> Unit = {},
     onOptionsClick: (Comment, CommentAction) -> Unit = { _, _ -> },
 ) {
@@ -76,10 +78,9 @@ fun CommentItem(
     val clipboardManager = LocalClipboardManager.current
     val coroutineScope = rememberCoroutineScope()
 
+    val isReply = remember(level) { level > 0 }
     val likes = remember { mutableStateListOf(*comment.likes.toTypedArray()) }
     val commentLiked = likes.contains(currentUserId)
-
-    var contentExpanded by remember { mutableStateOf(false) }
 
     val commentSheetState = rememberModalBottomSheetState()
     var showCommentSheet by rememberSaveable { mutableStateOf(false) }
@@ -91,7 +92,12 @@ fun CommentItem(
         if (isReply) {
             Box(
                 modifier = Modifier
-                    .padding(8.dp)
+                    .padding(
+                        start = (8 * level).dp,
+                        end = 8.dp,
+                        top = 8.dp,
+                        bottom = 8.dp,
+                    )
                     .background(
                         Brush.verticalGradient(
                             listOf(
@@ -153,6 +159,9 @@ fun CommentItem(
                         ) {
                             Text(
                                 "${comment.user.firstName} ${comment.user.lastName}",
+                                color =
+                                if (opId == comment.user.id) MaterialTheme.colorScheme.primary
+                                else Color.Unspecified,
                                 fontWeight = FontWeight.Bold,
                                 modifier = Modifier
                                     .clickable {
@@ -168,20 +177,10 @@ fun CommentItem(
                         }
                     }
 
-                    Text(
+                    MDDocument(
                         comment.content,
-                        maxLines = if (contentExpanded) Int.MAX_VALUE else if (isReply) 4 else 10,
-                        overflow = if (contentExpanded) TextOverflow.Clip else TextOverflow.Ellipsis,
                         modifier = Modifier
                             .fillMaxWidth()
-                            .combinedClickable(
-                                onClick = {
-                                    contentExpanded = !contentExpanded
-                                },
-                                onLongClick = {
-                                    showCommentSheet = true
-                                }
-                            )
                             .padding(8.dp)
                     )
 
@@ -192,7 +191,7 @@ fun CommentItem(
                     ) {
                         TextButton(
                             onClick = {
-                                if(likes.contains(currentUserId)) {
+                                if (likes.contains(currentUserId)) {
                                     likes.remove(currentUserId)
                                 } else {
                                     likes.add(currentUserId)
@@ -223,7 +222,7 @@ fun CommentItem(
 
                         TextButton(
                             onClick = {
-
+                                onReply(comment)
                             },
                             colors = ButtonDefaults.textButtonColors(
                                 contentColor = MaterialTheme.colorScheme.onSurfaceVariant
@@ -248,13 +247,18 @@ fun CommentItem(
                 CommentItem(
                     reply,
                     currentUserId = currentUserId,
-                    isReply = true,
+                    opId = opId,
+                    level = level + 1,
                     onUserClick = onUserClick,
                     onLiked = {
                         onLiked(it)
                     },
-                    modifier = Modifier
-                        .weight(1f)
+                    onReply = {
+                        onReply(it)
+                    },
+                    onOptionsClick = { it, action ->
+                        onOptionsClick(it, action)
+                    },
                 )
             }
         }
@@ -280,10 +284,13 @@ fun CommentItem(
                     },
                     modifier = Modifier
                         .clickable {
+                            showCommentSheet = false
+
                             coroutineScope.launch {
                                 commentSheetState.hide()
-                                showCommentSheet = false
                             }
+
+                            onOptionsClick(comment, CommentAction.Edit)
                         }
                 )
             }
@@ -323,10 +330,11 @@ fun CommentItem(
                     modifier = Modifier
                         .clickable {
                             coroutineScope.launch {
-                                onOptionsClick(comment, CommentAction.Delete)
-                                commentSheetState.hide()
                                 showCommentSheet = false
+                                commentSheetState.hide()
                             }
+
+                            onOptionsClick(comment, CommentAction.Delete)
                         }
                 )
             }
@@ -335,6 +343,7 @@ fun CommentItem(
 }
 
 enum class CommentAction {
+    Edit,
     Delete,
     ;
 }

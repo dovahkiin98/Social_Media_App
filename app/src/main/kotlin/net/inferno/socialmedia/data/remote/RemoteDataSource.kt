@@ -3,7 +3,7 @@ package net.inferno.socialmedia.data.remote
 import dagger.Module
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
-import net.inferno.socialmedia.model.Post
+import net.inferno.socialmedia.model.Comment
 import net.inferno.socialmedia.model.UserImage
 import net.inferno.socialmedia.model.request.SignupRequest
 import net.inferno.socialmedia.model.response.BaseResponse
@@ -60,6 +60,10 @@ class RemoteDataSource @Inject constructor(
         postId: String,
     ) = remoteService.getPostDetails(postId)
 
+    override suspend fun getCommentDetails(
+        commentId: String,
+    ) = remoteService.getCommentDetails(commentId)
+
     override suspend fun likePost(
         postId: String,
     ) = remoteService.likePost(postId)
@@ -68,12 +72,33 @@ class RemoteDataSource @Inject constructor(
         postId: String,
     ) = remoteService.deletePost(postId)
 
+    override suspend  fun createPost(
+        content: MultipartBody.Part,
+        image: MultipartBody.Part?,
+    ) = remoteService.createPost(content, image)
+
+    override suspend  fun updatePost(
+        postId: String,
+        content: String,
+    ) = remoteService.updatePost(postId, content)
+    //endregion
+
+    //region Comments
     override suspend fun getPostComments(
         postId: String,
     ) = remoteService.getPostComments(postId)
 
     override suspend fun likeComment(
-        body: Map<String, String,>
+        body: Map<String, String>
     ) = remoteService.likeComment(body)
+
+    override suspend  fun createComment(
+        body: Map<String, String?>
+    ) = remoteService.createComment(body)
+
+    override suspend  fun updateComment(
+        commentId: String,
+        body: Comment.CommentJson,
+    ) = remoteService.updateComment(commentId, body)
     //endregion
 }

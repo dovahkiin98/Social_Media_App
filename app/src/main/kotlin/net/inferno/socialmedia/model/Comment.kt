@@ -44,4 +44,48 @@ data class Comment(
     override fun hashCode() = id.toInt()
 
     override fun toString() = "Comment($id, $content)"
+
+    @JsonClass(generateAdapter = true)
+    class CommentJson(
+        @Json(name = "_id")
+        val id: String,
+
+        @Json(name = "content")
+        val content: String,
+
+        @Json(name = "postId")
+        val postId: String,
+
+        @Json(name = "user")
+        val user: String,
+
+        @Json(name = "likedBy")
+        val likes: List<String> = listOf(),
+
+        @Json(name = "repliedBy")
+        val replies: List<String> = listOf(),
+
+        @Json(name = "repliedTo")
+        val repliedTo: String? = null,
+
+        @DateString
+        @Json(name = "createdAt")
+        val createdAt: LocalDateTime?,
+
+        @DateString
+        @Json(name = "updatedAt")
+        val updatedAt: LocalDateTime?,
+    )
+
+    fun toJson() = CommentJson(
+        id,
+        content,
+        postId,
+        user.id,
+        likes,
+        replies.map { it.id },
+        repliedTo,
+        createdAt,
+        updatedAt,
+    )
 }

@@ -18,6 +18,8 @@ import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.calculateEndPadding
+import androidx.compose.foundation.layout.calculateStartPadding
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -30,6 +32,8 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.ExperimentalMaterialApi
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.pullrefresh.PullRefreshIndicator
 import androidx.compose.material.pullrefresh.pullRefresh
 import androidx.compose.material.pullrefresh.rememberPullRefreshState
@@ -37,6 +41,7 @@ import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ElevatedButton
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.MaterialTheme
@@ -69,6 +74,7 @@ import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.SpanStyle
@@ -110,6 +116,7 @@ fun UserProfileUI(
     viewModel: UserProfileViewModel = hiltViewModel(),
 ) {
     val context = LocalContext.current
+    val layoutDirection = LocalLayoutDirection.current
 
     val cropImageLauncher = rememberLauncherForActivityResult(
         CropImageContract(),
@@ -279,6 +286,19 @@ fun UserProfileUI(
         snackbarHost = {
             SnackbarHost(snackbarHostState)
         },
+        floatingActionButton = {
+            ExtendedFloatingActionButton(
+                text = {
+                    Text(stringResource(id = R.string.new_post))
+                },
+                icon = {
+                    Icon(Icons.Default.Edit, null)
+                },
+                onClick = {
+                    navController.navigate(Routes.addPost(null))
+                },
+            )
+        },
         modifier = Modifier
             .nestedScroll(topAppBarScrollBehavior.nestedScrollConnection)
     ) { paddingValues ->
@@ -295,9 +315,13 @@ fun UserProfileUI(
             ) {
                 LazyColumn(
                     state = lazyListState,
-                    contentPadding = paddingValues,
-
-                    ) {
+                    contentPadding = PaddingValues(
+                        top = paddingValues.calculateTopPadding(),
+                        start = paddingValues.calculateStartPadding(layoutDirection),
+                        end = paddingValues.calculateEndPadding(layoutDirection),
+                        bottom = paddingValues.calculateBottomPadding() + 72.dp,
+                    ),
+                ) {
                     item {
                         Column {
                             BoxWithConstraints {
@@ -497,7 +521,7 @@ fun UserProfileUI(
                                     navController.navigate(Routes.post(post))
                                 },
                                 onUserClick = { user ->
-                                    navController.navigate(Routes.profile(if(currentUser!!.id == user.id) null else user))
+                                    navController.navigate(Routes.profile(if (currentUser!!.id == user.id) null else user))
                                 },
                                 modifier = Modifier
                                     .padding(vertical = 8.dp)

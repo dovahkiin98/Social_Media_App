@@ -36,6 +36,8 @@ junit = "4.13.2"
 androidx-test-ext-junit = "1.1.5"
 espresso-core = "3.5.1"
 
+commonmark = "0.21.0"
+
 [libraries]
 android-tools-build-gradle = { module = "com.android.tools.build:gradle", version.ref = "gradle" }
 
@@ -116,6 +118,10 @@ junit = { group = "junit", name = "junit", version.ref = "junit" }
 androidx-test-ext-junit = { group = "androidx.test.ext", name = "junit", version.ref = "androidx-test-ext-junit" }
 espresso-core = { group = "androidx.test.espresso", name = "espresso-core", version.ref = "espresso-core" }
 
+commonmark-core = { module = "org.commonmark:commonmark", version.ref = "commonmark" }
+commonmark-ins = { module = "org.commonmark:commonmark-ext-ins", version.ref = "commonmark" }
+commonmark-strikethrough = { module = "org.commonmark:commonmark-ext-gfm-strikethrough", version.ref = "commonmark" }
+
 [bundles]
 compose = [
     "androidx-compose-ui",
@@ -123,4 +129,10 @@ compose = [
     "androidx-compose-ui-tooling-preview",
     "androidx-compose-material",
     "androidx-compose-runtime",
+]
+
+commonmark = [
+    "commonmark-core",
+    "commonmark-ins",
+    "commonmark-strikethrough",
 ]

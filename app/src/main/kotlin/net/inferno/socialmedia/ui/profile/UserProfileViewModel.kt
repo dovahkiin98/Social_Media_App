@@ -16,6 +16,7 @@ import net.inferno.socialmedia.model.Post
 import net.inferno.socialmedia.model.UIState
 import net.inferno.socialmedia.model.User
 import net.inferno.socialmedia.model.UserDetails
+import net.inferno.socialmedia.ui.main.MainViewModel
 import retrofit2.HttpException
 import java.io.File
 import javax.inject.Inject

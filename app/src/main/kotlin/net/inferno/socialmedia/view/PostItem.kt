@@ -53,12 +53,12 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import kotlinx.coroutines.launch
 import net.inferno.socialmedia.R
+import net.inferno.socialmedia.model.MIXED_MD
 import net.inferno.socialmedia.model.Post
 import net.inferno.socialmedia.model.User
 import net.inferno.socialmedia.utils.toReadableText
@@ -82,7 +82,6 @@ fun PostItem(
     val context = LocalContext.current
     val coroutineScope = rememberCoroutineScope()
 
-    var contentExpanded by remember { mutableStateOf(false) }
     val likes = remember { mutableStateListOf(*post.likes.toTypedArray()) }
     val postLiked = likes.contains(currentUserId)
 
@@ -163,21 +162,28 @@ fun PostItem(
         }
 
         if (post.content.isNotBlank()) {
-            Text(
+            MDDocument(
                 post.content,
-                maxLines = if (contentExpanded) Int.MAX_VALUE else 3,
-                overflow = if (contentExpanded) TextOverflow.Clip else TextOverflow.Ellipsis,
+                clip = true,
                 modifier = Modifier
                     .animateContentSize()
                     .fillMaxWidth()
                     .combinedClickable(
                         onClick = {
-                            contentExpanded = !contentExpanded
+                            onClick(post)
                         },
                         onLongClick = {
-                            clipboardManager.setText(AnnotatedString(post.content))
+                            clipboardManager.setText(
+                                AnnotatedString(
+                                    post.content
+                                )
+                            )
                             Toast
-                                .makeText(context, R.string.post_copied, Toast.LENGTH_SHORT)
+                                .makeText(
+                                    context,
+                                    R.string.post_copied,
+                                    Toast.LENGTH_SHORT
+                                )
                                 .show()
                         }
                     )
@@ -288,7 +294,7 @@ fun PostItem(
 
             TextButton(
                 onClick = {
-
+                    onClick(post)
                 },
                 colors = ButtonDefaults.textButtonColors(
                     contentColor = MaterialTheme.colorScheme.onSurfaceVariant

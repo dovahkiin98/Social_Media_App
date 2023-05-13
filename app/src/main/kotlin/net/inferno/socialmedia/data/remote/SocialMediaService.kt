@@ -79,6 +79,11 @@ interface SocialMediaService {
         @Query("postId") postId: String,
     ): BaseResponse<Post>
 
+    @GET("comments")
+    suspend fun getCommentDetails(
+        @Query("commentId") commentId: String,
+    ): BaseResponse<Comment>
+
     @FormUrlEncoded
     @PATCH("posts/like")
     suspend fun likePost(
@@ -90,6 +95,22 @@ interface SocialMediaService {
         @Query("postId") postId: String,
     ): BaseResponse<Any>
 
+    @Multipart
+    @POST("posts")
+    suspend fun createPost(
+        @Part content: MultipartBody.Part,
+        @Part image: MultipartBody.Part?,
+    ): BaseResponse<Post>
+
+    @FormUrlEncoded
+    @PATCH("posts")
+    suspend fun updatePost(
+        @Field("postId") postId: String,
+        @Field("describtion") content: String,
+    ): BaseResponse<Post>
+    //endregion
+
+    //region Comments
     @GET("posts/comments")
     suspend fun getPostComments(
         @Query("postId") postId: String,
@@ -98,6 +119,17 @@ interface SocialMediaService {
     @PATCH("comments/likes")
     suspend fun likeComment(
         @Body body: Map<String, String>,
+    ): BaseResponse<Comment>
+
+    @POST("comments")
+    suspend fun createComment(
+        @Body body: Map<String, String?>,
+    ): BaseResponse<Comment>
+
+    @PATCH("comments")
+    suspend fun updateComment(
+        @Query("commentId") commentId: String,
+        @Body body: Comment.CommentJson,
     ): BaseResponse<Comment>
     //endregion
 }

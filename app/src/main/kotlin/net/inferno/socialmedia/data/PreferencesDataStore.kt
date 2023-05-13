@@ -28,7 +28,7 @@ class PreferencesDataStore @Inject constructor(
 
     val savedUser
         get() = dataStore.data.map {
-            it[SAVED_USER] ?: ""
+            it[SAVED_USER]
         }
 
     suspend fun saveUser(user: String) = dataStore.edit {
