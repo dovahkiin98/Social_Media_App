@@ -22,6 +22,7 @@ import androidx.compose.material3.DrawerValue
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.ListItem
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalDrawerSheet
 import androidx.compose.material3.ModalNavigationDrawer
@@ -47,6 +48,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.nestedscroll.nestedScroll
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -61,6 +63,7 @@ import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import kotlinx.coroutines.launch
 import net.inferno.socialmedia.R
+import net.inferno.socialmedia.model.UserDetails
 import net.inferno.socialmedia.ui.main.Routes
 import net.inferno.socialmedia.view.UserImage
 
@@ -102,114 +105,90 @@ fun HomeUI(
             ) {
                 Column(
                     modifier = Modifier
-                        .padding(horizontal = 16.dp)
                         .verticalScroll(drawerScrollState)
                 ) {
                     Spacer(Modifier.height(16.dp))
 
-                    Row {
-                        UserImage(
-                            onClick = {
-                                navController.navigate(Routes.profile(null))
-                            },
-                            modifier = Modifier
-                                .size(56.dp)
-                        ) {
-                            if (user.profileImageUrl != null) {
-                                AsyncImage(
-                                    model = ImageRequest.Builder(LocalContext.current)
-                                        .data(user.profileImageUrl)
-                                        .crossfade(true)
-                                        .build(),
-                                    contentDescription = null,
-                                )
-                            } else {
-                                Box(
-                                    modifier = Modifier.background(Color.Red)
-                                )
-                            }
-                        }
-
-                        Box(modifier = Modifier.weight(1f))
-
-                        IconButton(
-                            onClick = {
-                                showLogoutDialog = true
-                            },
-                        ) {
-                            Icon(
-                                painterResource(id = R.drawable.ic_logout),
-                                contentDescription = null,
-                            )
-                        }
-                    }
-
-                    Spacer(Modifier.height(16.dp))
-
-                    Text(
-                        "${user.firstName} ${user.lastName}",
-                        fontWeight = FontWeight.Bold,
+                    DrawerHeader(
+                        user = user,
+                        onClickUserImage = {
+                            navController.navigate(Routes.profile(null))
+                        },
+                        onClickLogout = {
+                            showLogoutDialog = true
+                        },
+                        onClickFollowees = {
+                            navController.navigate(Routes.followings(null))
+                        },
+                        onClickFollowers = {
+                            navController.navigate(Routes.followers(null))
+                        },
                     )
-
-                    Spacer(Modifier.height(8.dp))
-
-                    FlowRow(
-                        modifier = Modifier
-                    ) {
-                        Text(
-                            buildAnnotatedString {
-                                pushStyle(
-                                    SpanStyle(
-                                        fontWeight = FontWeight.Bold,
-                                        color = MaterialTheme.colorScheme.onSurface,
-                                    )
-                                )
-                                append(user.followes.size.toString())
-                                pop()
-
-                                append(" ")
-                                append("Following")
-                            },
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            fontSize = 14.sp,
-                            modifier = Modifier
-                                .clip(RoundedCornerShape(8.dp))
-                                .clickable {
-                                    navController.navigate(Routes.followings(null))
-                                }
-                                .padding(vertical = 8.dp)
-                        )
-
-                        Spacer(Modifier.width(8.dp))
-
-                        Text(
-                            buildAnnotatedString {
-                                pushStyle(
-                                    SpanStyle(
-                                        fontWeight = FontWeight.Bold,
-                                        color = MaterialTheme.colorScheme.onSurface,
-                                    )
-                                )
-                                append(user.followers.size.toString())
-                                pop()
-
-                                append(" ")
-                                append("Followers")
-                            },
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            fontSize = 14.sp,
-                            modifier = Modifier
-                                .clip(RoundedCornerShape(8.dp))
-                                .clickable {
-                                    navController.navigate(Routes.followers(null))
-                                }
-                                .padding(vertical = 8.dp)
-                        )
-                    }
 
                     Spacer(Modifier.height(16.dp))
 
                     Divider()
+
+                    Text(
+                        stringResource(id = R.string.communities),
+                        fontWeight = FontWeight.Bold,
+                        modifier = Modifier
+                            .padding(
+                                vertical = 8.dp,
+                                horizontal = 16.dp,
+                            )
+                    )
+
+                    user.allCommunities.forEach {
+                        println(it.coverImageUrl)
+
+                        ListItem(
+                            leadingContent = {
+                                UserImage(
+                                    onClick = {},
+                                    modifier = Modifier
+                                        .size(48.dp)
+                                ) {
+                                    if (it.coverImageUrl != null) {
+                                        AsyncImage(
+                                            model = ImageRequest.Builder(LocalContext.current)
+                                                .data(it.coverImageUrl)
+                                                .crossfade(true)
+                                                .build(),
+                                            contentDescription = null,
+                                            contentScale = ContentScale.Crop,
+                                        )
+                                    } else {
+                                        Box(
+                                            modifier = Modifier.background(Color.Red)
+                                        )
+                                    }
+                                }
+                            },
+                            headlineContent = {
+                                Text(it.name)
+                            },
+                            supportingContent = {
+                                if (user.isAdmin(it)) {
+                                    Text(
+                                        stringResource(id = R.string.admin),
+                                        color = MaterialTheme.colorScheme.primary,
+                                    )
+                                }
+
+                                if (user.isManager(it)) {
+                                    Text(
+                                        stringResource(id = R.string.manager),
+                                        color = MaterialTheme.colorScheme.tertiary,
+                                    )
+                                }
+                            },
+                            modifier = Modifier
+                                .clickable {
+                                    navController.navigate(Routes.community(it))
+                                }
+                        )
+                    }
                 }
 
                 Box(modifier = Modifier.weight(1f))
@@ -300,5 +279,119 @@ fun HomeUI(
                 Text(stringResource(id = R.string.logout_message))
             }
         )
+    }
+}
+
+@OptIn(ExperimentalLayoutApi::class)
+@Composable
+fun DrawerHeader(
+    user: UserDetails,
+    onClickUserImage: () -> Unit = {},
+    onClickLogout: () -> Unit = {},
+    onClickFollowees: () -> Unit = {},
+    onClickFollowers: () -> Unit = {},
+) {
+    Column(
+        modifier = Modifier.padding(horizontal = 16.dp)
+    ) {
+        Row {
+            UserImage(
+                onClick = {
+                    onClickUserImage()
+                },
+                modifier = Modifier
+                    .size(56.dp)
+            ) {
+                if (user.profileImageUrl != null) {
+                    AsyncImage(
+                        model = ImageRequest.Builder(LocalContext.current)
+                            .data(user.profileImageUrl)
+                            .crossfade(true)
+                            .build(),
+                        contentDescription = null,
+                    )
+                } else {
+                    Box(
+                        modifier = Modifier.background(Color.Red)
+                    )
+                }
+            }
+
+            Box(modifier = Modifier.weight(1f))
+
+            IconButton(
+                onClick = {
+                    onClickLogout()
+                },
+            ) {
+                Icon(
+                    painterResource(id = R.drawable.ic_logout),
+                    contentDescription = null,
+                )
+            }
+        }
+
+        Spacer(Modifier.height(16.dp))
+
+        Text(
+            "${user.firstName} ${user.lastName}",
+            fontWeight = FontWeight.Bold,
+        )
+
+        Spacer(Modifier.height(8.dp))
+
+        FlowRow(
+            modifier = Modifier
+        ) {
+            Text(
+                buildAnnotatedString {
+                    pushStyle(
+                        SpanStyle(
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.onSurface,
+                        )
+                    )
+                    append(user.followes.size.toString())
+                    pop()
+
+                    append(" ")
+                    append("Following")
+                },
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                fontSize = 14.sp,
+                modifier = Modifier
+                    .clip(RoundedCornerShape(8.dp))
+                    .clickable {
+                        onClickFollowees()
+                    }
+                    .padding(vertical = 8.dp)
+            )
+
+            Spacer(Modifier.width(8.dp))
+
+            Text(
+                buildAnnotatedString {
+                    pushStyle(
+                        SpanStyle(
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.onSurface,
+                        )
+                    )
+                    append(user.followers.size.toString())
+                    pop()
+
+                    append(" ")
+                    append("Followers")
+                },
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                fontSize = 14.sp,
+                modifier = Modifier
+                    .clip(RoundedCornerShape(8.dp))
+                    .clickable {
+                        onClickFollowers()
+                    }
+                    .padding(vertical = 8.dp)
+            )
+        }
     }
 }

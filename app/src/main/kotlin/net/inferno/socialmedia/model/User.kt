@@ -24,4 +24,11 @@ open class User(
     var coverImageUrl: String? = null
 
     override fun toString() = "User(${id}, $firstName $lastName)"
+
+    override fun equals(other: Any?) = when (other) {
+        is User -> this.id == other.id
+        else -> false
+    }
+
+    override fun hashCode() = id.hashCode()
 }

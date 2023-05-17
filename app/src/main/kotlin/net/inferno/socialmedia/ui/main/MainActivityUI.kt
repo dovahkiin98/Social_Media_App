@@ -15,20 +15,22 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import net.inferno.socialmedia.data.PreferencesDataStore
-import net.inferno.socialmedia.model.DummyUser
-import net.inferno.socialmedia.model.Post
+import net.inferno.socialmedia.model.Community
 import net.inferno.socialmedia.ui.apps.AppsUI
-import net.inferno.socialmedia.ui.commentForm.CommentForm
-import net.inferno.socialmedia.ui.editProfile.EditProfileUI
-import net.inferno.socialmedia.ui.followers.UserFollowersUI
-import net.inferno.socialmedia.ui.followes.UserFollowesUI
+import net.inferno.socialmedia.ui.comment.form.CommentForm
+import net.inferno.socialmedia.ui.community.details.CommunityUI
+import net.inferno.socialmedia.ui.user.editProfile.EditProfileUI
+import net.inferno.socialmedia.ui.user.followers.UserFollowersUI
+import net.inferno.socialmedia.ui.user.followes.UserFollowesUI
 import net.inferno.socialmedia.ui.home.HomeUI
 import net.inferno.socialmedia.ui.image.ImageUI
-import net.inferno.socialmedia.ui.login.LoginUI
-import net.inferno.socialmedia.ui.post.PostDetailsUI
-import net.inferno.socialmedia.ui.postForm.PostForm
-import net.inferno.socialmedia.ui.profile.UserProfileUI
-import net.inferno.socialmedia.ui.register.RegisterUI
+import net.inferno.socialmedia.ui.auth.login.LoginUI
+import net.inferno.socialmedia.ui.post.details.PostDetailsUI
+import net.inferno.socialmedia.ui.post.form.PostForm
+import net.inferno.socialmedia.ui.user.profile.UserProfileUI
+import net.inferno.socialmedia.ui.auth.register.RegisterUI
+import net.inferno.socialmedia.ui.community.members.CommunityMembersUI
+import net.inferno.socialmedia.ui.community.requests.CommunityRequestsUI
 
 @Composable
 fun MainActivityUI(
@@ -46,12 +48,12 @@ fun MainActivityUI(
     val start = if (preferences.isUserLoggedIn) Routes.HOME else Routes.LOGIN
 
     var navigated by rememberSaveable { mutableStateOf(false) }
-    if (preferences.isUserLoggedIn && !navigated) {
-        navigated = true
-        LaunchedEffect(Unit) {
-            navController.navigate(Routes.profile(null))
-        }
-    }
+//    if (preferences.isUserLoggedIn && !navigated) {
+//        navigated = true
+//        LaunchedEffect(Unit) {
+//            navController.navigate(Routes.profile(null))
+//        }
+//    }
 //    if (preferences.isUserLoggedIn && !navigated) {
 //        navigated = true
 //        LaunchedEffect(Unit) {
@@ -66,6 +68,20 @@ fun MainActivityUI(
 //            )
 //        }
 //    }
+    if (preferences.isUserLoggedIn && !navigated) {
+        navigated = true
+        LaunchedEffect(Unit) {
+            navController.navigate(
+                Routes.community(
+                    Community(
+                        id = "6463530421e45374a1a4eb82",
+                        name = "abc",
+                        coverImageName = null,
+                    )
+                )
+            )
+        }
+    }
 
     NavHost(
         navController,
@@ -158,6 +174,39 @@ fun MainActivityUI(
             ),
         ) {
             CommentForm(navController = navController)
+        }
+
+        composable(
+            "${Routes.COMMUNITY}?communityId={communityId}",
+            arguments = listOf(
+                navArgument("communityId") {
+                    type = NavType.StringType
+                },
+            ),
+        ) {
+            CommunityUI(navController = navController)
+        }
+
+        composable(
+            "${Routes.COMMUNITY_MEMBERS}?communityId={communityId}",
+            arguments = listOf(
+                navArgument("communityId") {
+                    type = NavType.StringType
+                },
+            ),
+        ) {
+            CommunityMembersUI(navController = navController)
+        }
+
+        composable(
+            "${Routes.COMMUNITY_REQUESTS}?communityId={communityId}",
+            arguments = listOf(
+                navArgument("communityId") {
+                    type = NavType.StringType
+                },
+            ),
+        ) {
+            CommunityRequestsUI(navController = navController)
         }
 
         composable(

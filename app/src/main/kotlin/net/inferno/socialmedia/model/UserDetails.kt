@@ -37,4 +37,32 @@ class UserDetails(
 
     @Json(name = "posts")
     val posts: List<String> = listOf(),
-) : User(id, firstName, lastName, profileImage, coverImage)
+
+    @Json(name = "adminedCommunities")
+    val adminedCommunities: List<Community> = listOf(),
+
+    @Json(name = "managedCommunities")
+    val managedCommunities: List<Community> = listOf(),
+
+    @Json(name = "blockedCommunities")
+    val blockedCommunities: List<Community> = listOf(),
+
+    @Json(name = "communities")
+    val communities: List<CommunityRequest> = listOf(),
+) : User(id, firstName, lastName, profileImage, coverImage) {
+
+    @Json(ignore = true)
+    val allCommunities = (managedCommunities + adminedCommunities + communities
+        .map { it.community }).distinct()
+
+    fun isAdmin(community: Community) = adminedCommunities.contains(community)
+
+    fun isManager(community: Community) = managedCommunities.contains(community)
+
+    override fun equals(other: Any?) = when (other) {
+        is User -> this.id == other.id
+        else -> false
+    }
+
+    override fun hashCode() = id.hashCode()
+}

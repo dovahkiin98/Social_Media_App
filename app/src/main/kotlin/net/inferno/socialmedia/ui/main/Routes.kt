@@ -2,6 +2,7 @@ package net.inferno.socialmedia.ui.main
 
 import android.net.Uri
 import net.inferno.socialmedia.model.Comment
+import net.inferno.socialmedia.model.Community
 import net.inferno.socialmedia.model.Post
 import net.inferno.socialmedia.model.User
 
@@ -21,6 +22,10 @@ object Routes {
     const val POST = "post"
     const val ADD_COMMENT = "add_comment"
     const val ADD_POST = "add_post"
+
+    const val COMMUNITY = "community"
+    const val COMMUNITY_MEMBERS = "community/members"
+    const val COMMUNITY_REQUESTS = "community/requests"
 
     const val IMAGE = "image"
 
@@ -92,5 +97,27 @@ object Routes {
         .path(ADD_COMMENT)
         .appendQueryParameter("postId", null)
         .appendQueryParameter("commentId", comment?.id)
+        .toString()
+
+
+    fun community(
+        community: Community,
+    ) = Uri.Builder()
+        .path(COMMUNITY)
+        .appendQueryParameter("communityId", community.id)
+        .toString()
+
+    fun communityMembers(
+        community: Community,
+    ) = Uri.Builder()
+        .path(COMMUNITY_MEMBERS)
+        .appendQueryParameter("communityId", community.id)
+        .toString()
+
+    fun communityRequests(
+        community: Community,
+    ) = Uri.Builder()
+        .path(COMMUNITY_REQUESTS)
+        .appendQueryParameter("communityId", community.id)
         .toString()
 }

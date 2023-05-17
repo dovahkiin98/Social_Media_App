@@ -88,6 +88,10 @@ class RemoteDataSource @Inject constructor(
         postId: String,
     ) = remoteService.getPostComments(postId)
 
+    override suspend fun deleteComment(
+        commentId: String,
+    ) = remoteService.deleteComment(commentId)
+
     override suspend fun likeComment(
         body: Map<String, String>
     ) = remoteService.likeComment(body)
@@ -98,7 +102,22 @@ class RemoteDataSource @Inject constructor(
 
     override suspend  fun updateComment(
         commentId: String,
-        body: Comment.CommentJson,
-    ) = remoteService.updateComment(commentId, body)
+        content: String,
+    ) = remoteService.updateComment(commentId, content)
+    //endregion
+
+    //region Community
+    override suspend fun getCommunityDetails(
+        communityId: String,
+    ) = remoteService.getCommunityDetails(communityId)
+
+    override suspend fun getCommunityPosts(
+        communityId: String,
+    ) = remoteService.getCommunityPosts(communityId)
+
+    override suspend fun uploadCommunityCoverImage(
+        image: MultipartBody.Part,
+        communityId: MultipartBody.Part,
+    ) = remoteService.uploadCommunityCoverImage(image, communityId)
     //endregion
 }

@@ -30,6 +30,7 @@ android {
     defaultConfig {
         applicationId = "net.inferno.socialmedia"
 
+        compileSdkPreview = "UpsideDownCake"
         minSdk = 24
         targetSdk = 33
 

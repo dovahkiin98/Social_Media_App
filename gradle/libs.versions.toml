@@ -1,13 +1,13 @@
 [versions]
-gradle = "8.2.0-alpha03"
+gradle = "8.2.0-alpha04"
 
 kotlin = "1.8.21"
 coRoutines = "1.6.4"
 serialization = "1.4.1"
 
-core = "1.11.0-alpha04"
+core = "1.12.0-alpha04"
 appCompat = "1.7.0-alpha02"
-activity = "1.7.1"
+activity = "1.8.0-alpha04"
 lifecycle = "2.6.1"
 navigation = "2.6.0-rc01"
 room = "2.5.1"

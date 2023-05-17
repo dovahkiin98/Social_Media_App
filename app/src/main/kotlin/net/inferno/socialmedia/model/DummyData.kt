@@ -1,6 +1,8 @@
 package net.inferno.socialmedia.model
 
 import org.intellij.lang.annotations.Language
+import java.time.LocalDateTime
+import java.util.UUID
 
 val DummyUser = UserDetails(
     id = "abc",
@@ -11,6 +13,30 @@ val DummyUser = UserDetails(
     followers = mutableListOf(),
     followes = mutableListOf(),
     phoneNumber = "0123456789",
+)
+
+val DummyCommunity = CommunityDetails(
+    id = "abc",
+    name = "Skyrim Lovers",
+    manager = DummyUser,
+    admins = listOf(),
+    description = "This is an example",
+    createdAt = LocalDateTime.now(),
+    isPublic = false,
+    requiresPostApproval = false,
+    members = buildList {
+        repeat(20) {
+            this += CommunityMember(
+                user = User(
+                    id = UUID.randomUUID().toString(),
+                    firstName = "Abc",
+                    lastName = "Cba",
+                ),
+                id = "abc",
+                joinedAt = LocalDateTime.now(),
+            )
+        }
+    },
 )
 
 @Language("Markdown")

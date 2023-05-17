@@ -54,11 +54,11 @@ import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import kotlinx.coroutines.launch
 import net.inferno.socialmedia.R
-import net.inferno.socialmedia.model.MIXED_MD
 import net.inferno.socialmedia.model.Post
 import net.inferno.socialmedia.model.User
 import net.inferno.socialmedia.utils.toReadableText
@@ -141,6 +141,8 @@ fun PostItem(
                 if (post.createdAt != null) {
                     Text(
                         post.createdAt.toReadableText(),
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        fontSize = 14.sp,
                     )
                 }
             }
@@ -333,9 +335,11 @@ fun PostItem(
                 },
                 modifier = Modifier
                     .clickable {
+                        onOptionsClick(post, PostAction.Edit)
+                        showPostSheet = false
+
                         coroutineScope.launch {
                             postSheetState.hide()
-                            showPostSheet = false
                         }
                     }
             )
@@ -351,10 +355,11 @@ fun PostItem(
                 },
                 modifier = Modifier
                     .clickable {
+                        onOptionsClick(post, PostAction.Delete)
+                        showPostSheet = false
+
                         coroutineScope.launch {
-                            onOptionsClick(post, PostAction.Delete)
                             postSheetState.hide()
-                            showPostSheet = false
                         }
                     }
             )
@@ -364,5 +369,6 @@ fun PostItem(
 
 enum class PostAction {
     Delete,
+    Edit,
     ;
 }

@@ -1,6 +1,8 @@
 package net.inferno.socialmedia.data.remote
 
 import net.inferno.socialmedia.model.Comment
+import net.inferno.socialmedia.model.CommunityDetails
+import net.inferno.socialmedia.model.CommunityPost
 import net.inferno.socialmedia.model.Post
 import net.inferno.socialmedia.model.User
 import net.inferno.socialmedia.model.UserDetails
@@ -116,6 +118,11 @@ interface SocialMediaService {
         @Query("postId") postId: String,
     ): BaseResponse<List<Comment>>
 
+    @DELETE("comments")
+    suspend fun deleteComment(
+        @Query("commentId") commentId: String,
+    ): BaseResponse<Any>
+
     @PATCH("comments/likes")
     suspend fun likeComment(
         @Body body: Map<String, String>,
@@ -126,10 +133,31 @@ interface SocialMediaService {
         @Body body: Map<String, String?>,
     ): BaseResponse<Comment>
 
+    @FormUrlEncoded
     @PATCH("comments")
     suspend fun updateComment(
-        @Query("commentId") commentId: String,
-        @Body body: Comment.CommentJson,
+        @Field("commentId") commentId: String,
+        @Field("content") content: String,
     ): BaseResponse<Comment>
+    //endregion
+
+    //region Community
+
+    @GET("community")
+    suspend fun getCommunityDetails(
+        @Query("communityId") communityId: String,
+    ): BaseResponse<CommunityDetails>
+
+    @GET("community/get-posts")
+    suspend fun getCommunityPosts(
+        @Query("communityId") communityId: String,
+    ): BaseResponse<List<CommunityPost>>
+
+    @Multipart
+    @PATCH("community/image")
+    suspend fun uploadCommunityCoverImage(
+        @Part image: MultipartBody.Part,
+        @Part communityId: MultipartBody.Part,
+    ): BaseResponse<String>
     //endregion
 }

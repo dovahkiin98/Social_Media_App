@@ -32,7 +32,12 @@ data class Post(
     @DateString
     @Json(name = "updatedAt")
     val updatedAt: LocalDateTime? = null,
+
+    @Json(name = "community")
+    val _community: PostCommunity,
 ) {
+    val community = if (_community.community != null) _community else null
+
     @JsonClass(generateAdapter = true)
     class PostImage(
         @Json(name = "_id")
@@ -41,15 +46,16 @@ data class Post(
         @Json(name = "fileName")
         val fileName: String,
     ) {
+        @Json(name = "imageUrl")
         var imageUrl: String? = null
     }
 
-    override fun equals(other: Any?) = when(other) {
+    override fun equals(other: Any?) = when (other) {
         is Post -> this.id == other.id
         else -> false
     }
 
     override fun hashCode() = id.toInt()
 
-    override fun toString() = "Post($id, $content)"
+    override fun toString() = "Post(id=$id, content=$content)"
 }

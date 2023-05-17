@@ -11,6 +11,9 @@ import kotlinx.coroutines.withContext
 import kotlinx.coroutines.withTimeout
 import net.inferno.socialmedia.data.remote.RemoteDataSource
 import net.inferno.socialmedia.model.Comment
+import net.inferno.socialmedia.model.Community
+import net.inferno.socialmedia.model.CommunityDetails
+import net.inferno.socialmedia.model.CommunityPost
 import net.inferno.socialmedia.model.Post
 import net.inferno.socialmedia.model.User
 import net.inferno.socialmedia.model.UserDetails
@@ -20,7 +23,6 @@ import net.inferno.socialmedia.model.response.BaseResponse
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.MultipartBody
 import okhttp3.RequestBody.Companion.asRequestBody
-import okhttp3.RequestBody.Companion.toRequestBody
 import java.io.File
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -52,6 +54,9 @@ class Repository @Inject constructor(
 
         user.profileImageUrl = getUserProfileImage(user)
         user.coverImageUrl = getUserCoverImage(user)
+        user.allCommunities.forEach {
+            it.coverImageUrl = getCommunityCoverImage(it)
+        }
 
         saveUser(user)
     }
@@ -72,7 +77,7 @@ class Repository @Inject constructor(
     }
 
     fun getSavedUserFlow() = preferencesDataStore.savedUser.map {
-        if (it != null) {
+        if (!it.isNullOrBlank()) {
             moshi.adapter(UserDetails::class.java).fromJson(it)!!
         } else {
             null
@@ -101,6 +106,9 @@ class Repository @Inject constructor(
         val user = response.data!!
         user.profileImageUrl = getUserProfileImage(user)
         user.coverImageUrl = getUserCoverImage(user)
+        user.allCommunities.forEach {
+            it.coverImageUrl = getCommunityCoverImage(it)
+        }
 
         if (userId == null) {
             saveUser(user)
@@ -237,10 +245,13 @@ class Repository @Inject constructor(
         saveUser(savedUser)
     }
 
-    fun logout() {
+    suspend fun logout() {
         preferences.edit {
             remove("token")
+            remove("userId")
         }
+
+        preferencesDataStore.saveUser("")
     }
     //endregion
 
@@ -255,6 +266,10 @@ class Repository @Inject constructor(
         post.publisher.profileImageUrl = getUserProfileImage(post.publisher)
         post.files.forEach {
             it.imageUrl = getPostImage(post, it)
+        }
+        if (post.community != null) {
+            post.community.community!!.coverImageUrl =
+                getCommunityCoverImage(post.community.community)
         }
 
         return post
@@ -369,6 +384,12 @@ class Repository @Inject constructor(
         return comments
     }
 
+    suspend fun deleteComment(comment: Comment) {
+        val response = makeRequest {
+            remoteDataSource.deleteComment(comment.id)
+        }
+    }
+
     suspend fun likeComment(comment: Comment): Comment {
         val response = makeRequest {
             remoteDataSource.likeComment(
@@ -413,9 +434,10 @@ class Repository @Inject constructor(
 
     suspend fun updateComment(
         comment: Comment,
+        content: String,
     ): Comment {
         val response = makeRequest {
-            remoteDataSource.updateComment(comment.id, comment.toJson())
+            remoteDataSource.updateComment(comment.id, content)
         }
 
         val newComment = response.data!!
@@ -423,6 +445,80 @@ class Repository @Inject constructor(
         newComment.user.profileImageUrl = getUserProfileImage(newComment.user)
 
         return newComment
+    }
+    //endregion
+
+    //region Community
+    suspend fun getCommunityDetails(
+        communityId: String,
+    ): CommunityDetails {
+        val response = makeRequest {
+            remoteDataSource.getCommunityDetails(communityId)
+        }
+
+        val community = response.data!!
+
+        community.coverImageUrl = getCommunityCoverImage(community)
+        community.pendingMembers.forEach {
+            it.user.profileImageUrl = getUserProfileImage(it.user)
+        }
+        community.members.forEach {
+            it.user.profileImageUrl = getUserProfileImage(it.user)
+        }
+        community.admins.forEach {
+            it.profileImageUrl = getUserProfileImage(it)
+        }
+        community.manager.profileImageUrl = getUserProfileImage(community.manager)
+
+        return community
+    }
+
+    suspend fun getCommunityPosts(
+        communityId: String,
+    ): List<CommunityPost> {
+        val response = makeRequest {
+            remoteDataSource.getCommunityPosts(communityId)
+        }
+
+        val posts = response.data!!
+
+        posts.forEach {
+            it.post.files.forEach { image ->
+                image.imageUrl = getPostImage(it.post, image)
+            }
+
+            it.post.publisher.profileImageUrl = getUserProfileImage(it.post.publisher)
+        }
+
+        return posts
+    }
+
+    suspend fun uploadCommunityCoverImage(
+        community: Community,
+        croppedImage: File,
+    ): String {
+        val fileBody = croppedImage.asRequestBody("image/*".toMediaType())
+        val filePart = MultipartBody.Part.createFormData(
+            "image",
+            croppedImage.name,
+            fileBody,
+        )
+
+        val stylePart = MultipartBody.Part.createFormData(
+            "communityId",
+            community.id,
+        )
+
+        val response = makeRequest {
+            remoteDataSource.uploadCommunityCoverImage(
+                filePart,
+                stylePart,
+            )
+        }
+
+        community.coverImageUrl = getCommunityCoverImage(community, response.data!!)
+
+        return response.data
     }
     //endregion
 
@@ -472,6 +568,24 @@ class Repository @Inject constructor(
             .appendPath(image.fileName)
             .appendQueryParameter("postId", post.id)
             .toString()
+    }
+
+    private fun getCommunityCoverImage(
+        community: Community,
+        image: String? = null,
+    ): String? {
+        val url = preferences.getString("url", "http://192.168.234.158:1000/api/")!!
+
+        if (community.coverImageName != null) {
+            return url.toUri().buildUpon()
+                .appendPath("community")
+                .appendPath("image")
+                .appendPath(image ?: community.coverImageName)
+                .appendQueryParameter("communityId", community.id)
+                .toString()
+        }
+
+        return null
     }
     //endregion
 

@@ -43,6 +43,8 @@ class HomeViewModel @Inject constructor(
     }
 
     fun logout() {
-        repository.logout()
+        viewModelScope.launch {
+            repository.logout()
+        }
     }
 }
