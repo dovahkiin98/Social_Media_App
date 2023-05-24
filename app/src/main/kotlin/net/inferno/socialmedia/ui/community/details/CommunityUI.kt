@@ -96,6 +96,7 @@ import net.inferno.socialmedia.ui.post.form.PostResult
 import net.inferno.socialmedia.utils.CropImageContract
 import net.inferno.socialmedia.utils.getFilePathFromUri
 import net.inferno.socialmedia.view.BackIconButton
+import net.inferno.socialmedia.view.CustomModalBottomSheet
 import net.inferno.socialmedia.view.ErrorView
 import net.inferno.socialmedia.view.LoadingView
 import net.inferno.socialmedia.view.PostAction
@@ -631,7 +632,7 @@ fun CommunityUI(
     }
 
     if (showCoverImageSheet) {
-        ModalBottomSheet(
+        CustomModalBottomSheet(
             onDismissRequest = {
                 showCoverImageSheet = false
             },

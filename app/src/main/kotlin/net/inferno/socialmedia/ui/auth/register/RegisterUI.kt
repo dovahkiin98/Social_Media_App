@@ -50,7 +50,9 @@ fun RegisterUI(
 ) {
     var signupRequest by viewModel.signupRequest
 
-    val pagerState = rememberPagerState()
+    val pagerState = rememberPagerState(
+        pageCount = { 2 },
+    )
 
     val keyboardController = LocalSoftwareKeyboardController.current
 
@@ -184,7 +186,6 @@ fun RegisterUI(
                 .padding(paddingValues),
         ) {
             HorizontalPager(
-                pageCount = 2,
                 state = pagerState,
                 userScrollEnabled = false,
                 modifier = Modifier

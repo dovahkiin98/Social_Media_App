@@ -37,9 +37,7 @@ class CommunityMembersViewModel @Inject constructor(
             _uiState.emit(if (isRefreshing) _uiState.value.refresh() else UIState.Loading())
 
             try {
-                val community = withContext(Dispatchers.IO) {
-                    repository.getCommunityDetails(communityId)
-                }
+                val community = repository.getCommunityDetails(communityId)
 
                 _uiState.emit(UIState.Success(community))
             } catch (e: HttpException) {
@@ -52,25 +50,16 @@ class CommunityMembersViewModel @Inject constructor(
 
     fun promoteUser(user: User) {
         viewModelScope.launch {
-            withContext(Dispatchers.IO) {
-
-            }
         }
     }
 
     fun demoteUser(user: User) {
         viewModelScope.launch {
-            withContext(Dispatchers.IO) {
-
-            }
         }
     }
 
     fun kickUser(user: User) {
         viewModelScope.launch {
-            withContext(Dispatchers.IO) {
-
-            }
         }
     }
 }

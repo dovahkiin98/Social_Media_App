@@ -4,13 +4,11 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 import net.inferno.socialmedia.data.Repository
 import net.inferno.socialmedia.model.Post
 import net.inferno.socialmedia.model.UIState
@@ -63,9 +61,7 @@ class UserProfileViewModel @Inject constructor(
             delay(1_000)
 
             try {
-                val user = withContext(Dispatchers.IO) {
-                    repository.getUserDetails(userId)
-                }
+                val user = repository.getUserDetails(userId)
 
                 if (userId != null) _userDataState.emit(UIState.Success(user))
             } catch (e: HttpException) {
@@ -85,9 +81,7 @@ class UserProfileViewModel @Inject constructor(
             delay(1_000)
 
             try {
-                val posts = withContext(Dispatchers.IO) {
-                    repository.getUserPosts(userId)
-                }
+                val posts = repository.getUserPosts(userId)
 
                 _userPostsState.emit(UIState.Success(posts))
             } catch (e: HttpException) {
@@ -100,9 +94,7 @@ class UserProfileViewModel @Inject constructor(
 
     fun toggleFollow(user: User) {
         viewModelScope.launch {
-            withContext(Dispatchers.IO) {
-                repository.toggleFollow(user)
-            }
+            repository.toggleFollow(user)
         }
     }
 
@@ -111,9 +103,7 @@ class UserProfileViewModel @Inject constructor(
             _profileImageUploadState.value = UIState.Loading()
 
             try {
-                val user = withContext(Dispatchers.IO) {
-                    repository.uploadProfileImage(croppedImage)
-                }
+                val user = repository.uploadProfileImage(croppedImage)
 
                 _userDataState.emit(UIState.Success(user))
                 _profileImageUploadState.emit(UIState.Success(null))
@@ -135,9 +125,7 @@ class UserProfileViewModel @Inject constructor(
             _coverImageUploadState.value = UIState.Loading()
 
             try {
-                val user = withContext(Dispatchers.IO) {
-                    repository.uploadCoverImage(croppedImage)
-                }
+                val user = repository.uploadCoverImage(croppedImage)
 
                 _userDataState.emit(UIState.Success(user))
                 _coverImageUploadState.emit(UIState.Success(null))
@@ -159,9 +147,7 @@ class UserProfileViewModel @Inject constructor(
             val posts = _userPostsState.value.data!!.toMutableList()
             val index = posts.indexOf(post)
 
-            val newPost = withContext(Dispatchers.IO) {
-                repository.likePost(post)
-            }
+            val newPost = repository.likePost(post)
 
             posts[index] = newPost
 
@@ -177,9 +163,7 @@ class UserProfileViewModel @Inject constructor(
             val index = posts.indexOf(post)
 
             try {
-                withContext(Dispatchers.IO) {
-                    repository.deletePost(post)
-                }
+                repository.deletePost(post)
 
                 posts.removeAt(index)
 

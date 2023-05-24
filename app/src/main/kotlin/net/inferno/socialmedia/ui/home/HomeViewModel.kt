@@ -36,9 +36,7 @@ class HomeViewModel @Inject constructor(
 
     private fun getUser() {
         viewModelScope.launch {
-            val user = withContext(Dispatchers.IO) {
-                repository.getUserDetails()
-            }
+            val user = repository.getUserDetails()
         }
     }
 

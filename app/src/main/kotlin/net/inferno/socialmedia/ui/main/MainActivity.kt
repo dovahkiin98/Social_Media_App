@@ -15,11 +15,16 @@ import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import net.inferno.socialmedia.data.PreferencesDataStore
 import net.inferno.socialmedia.theme.SocialMediaTheme
 import net.inferno.socialmedia.utils.isAdServicesAvailable
+import javax.inject.Inject
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
+    @Inject
+    lateinit var preferences: PreferencesDataStore
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
@@ -27,7 +32,9 @@ class MainActivity : ComponentActivity() {
 
         setContent {
             SocialMediaTheme {
-                MainActivityUI()
+                MainActivityUI(
+                    preferences = preferences,
+                )
             }
         }
 

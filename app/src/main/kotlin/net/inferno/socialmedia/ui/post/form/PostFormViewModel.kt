@@ -47,9 +47,7 @@ class PostFormViewModel @Inject constructor(
 
         viewModelScope.launch {
             try {
-                val post = withContext(Dispatchers.IO) {
-                    repository.getPostDetails(postId!!)
-                }
+                val post = repository.getPostDetails(postId!!)
 
                 _postDataState.emit(UIState.Success(post))
             } catch (e: HttpException) {
@@ -68,9 +66,7 @@ class PostFormViewModel @Inject constructor(
 
         viewModelScope.launch {
             try {
-                val post = withContext(Dispatchers.IO) {
-                    repository.createPost(content, image)
-                }
+                val post = repository.createPost(content, image)
 
                 _postAddState.value = UIState.Success(null)
             } catch (e: HttpException) {
@@ -94,9 +90,7 @@ class PostFormViewModel @Inject constructor(
             val comment = postDataState.value.data!!.copy(content = content)
 
             try {
-                val newPost = withContext(Dispatchers.IO) {
-                    repository.updatePost(comment)
-                }
+                val newPost = repository.updatePost(comment)
 
                 _postAddState.value = UIState.Success(null)
             } catch (e: HttpException) {

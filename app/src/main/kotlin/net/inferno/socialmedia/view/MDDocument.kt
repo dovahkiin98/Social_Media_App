@@ -1,18 +1,19 @@
 package net.inferno.socialmedia.view
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.text.ClickableText
 import androidx.compose.material3.ColorScheme
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -23,14 +24,12 @@ import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.onPlaced
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.ExperimentalTextApi
 import androidx.compose.ui.text.SpanStyle
-import androidx.compose.ui.text.TextLayoutResult
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.UrlAnnotation
 import androidx.compose.ui.text.buildAnnotatedString
@@ -419,33 +418,54 @@ private fun MarkdownText(
     modifier: Modifier = Modifier,
 ) {
     val uriHandler = LocalUriHandler.current
-    var layoutResult by remember {
-        mutableStateOf<TextLayoutResult?>(null)
+    val urlAnnotationsCount by remember {
+        derivedStateOf {
+            text.getUrlAnnotations(0, text.length).size
+        }
     }
 
-    Text(
-        text = text,
-//        modifier = modifier
-//            .pointerInput(Unit) {
-//                detectTapGestures { pos ->
-//                    layoutResult?.let {
-//                        val position = it.getOffsetForPosition(pos)
-//
-//                        text.getUrlAnnotations(position, position).firstOrNull()?.let { sa ->
-//                            uriHandler.openUri(sa.item.url)
-//                        }
-//                    }
-//                }
-//            },
-        style = style,
-        onTextLayout = {
-            layoutResult = it
-        }
-    )
+//    if (urlAnnotationsCount == 0) {
+    if (true) {
+        Text(
+            text = text,
+            style = style,
+        )
+    } else {
+        ClickableText(
+            text = text,
+            style = style,
+            onClick = { offset ->
+                text.getUrlAnnotations(offset, offset).firstOrNull()?.let { urlAnnotation ->
+                    uriHandler.openUri(urlAnnotation.item.url)
+                }
+            },
+        )
+    }
 }
 
 @Preview(
-    showBackground = true
+    showBackground = true,
+    name = "Clipped",
+)
+@Composable
+fun DefaultPreviewClipped() {
+    SocialMediaTheme {
+        Surface {
+            MDDocument(
+                MIXED_MD,
+                clip = true,
+                modifier = Modifier
+                    .fillMaxWidth()
+//                    .verticalScroll(rememberScrollState())
+                    .padding(16.dp)
+            )
+        }
+    }
+}
+
+@Preview(
+    showBackground = true,
+    name = "Full",
 )
 @Composable
 fun DefaultPreview() {
@@ -453,7 +473,45 @@ fun DefaultPreview() {
         Surface {
             MDDocument(
                 MIXED_MD,
+                modifier = Modifier
+                    .fillMaxWidth()
+//                    .verticalScroll(rememberScrollState())
+                    .padding(16.dp)
+            )
+        }
+    }
+}
+
+@Preview(
+    showBackground = true,
+    name = "Clipped Dark",
+)
+@Composable
+fun DefaultPreviewClippedDark() {
+    SocialMediaTheme(darkTheme = true) {
+        Surface {
+            MDDocument(
+                MIXED_MD,
                 clip = true,
+                modifier = Modifier
+                    .fillMaxWidth()
+//                    .verticalScroll(rememberScrollState())
+                    .padding(16.dp)
+            )
+        }
+    }
+}
+
+@Preview(
+    showBackground = true,
+    name = "Full Dark",
+)
+@Composable
+fun DefaultPreviewDark() {
+    SocialMediaTheme(darkTheme = true) {
+        Surface {
+            MDDocument(
+                MIXED_MD,
                 modifier = Modifier
                     .fillMaxWidth()
 //                    .verticalScroll(rememberScrollState())

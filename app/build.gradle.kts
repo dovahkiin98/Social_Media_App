@@ -43,6 +43,8 @@ android {
             compose = true
             buildConfig = true
         }
+
+        testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
     flavorDimensions += arrayOf("dev")
@@ -195,5 +197,14 @@ dependencies {
 
     //region Third Party
     implementation(libs.bundles.commonmark)
+    //endregion
+
+    //region Testing
+    // Test rules and transitive dependencies:
+    androidTestImplementation(libs.androidx.compose.ui.test.junit4)
+    // Needed for createAndroidComposeRule, but not createComposeRule:
+    debugImplementation(libs.androidx.compose.ui.test.manifest)
+
+    implementation("androidx.tracing:tracing:1.1.0")
     //endregion
 }

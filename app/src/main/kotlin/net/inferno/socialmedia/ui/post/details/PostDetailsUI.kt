@@ -8,8 +8,11 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -42,7 +45,6 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
@@ -95,6 +97,7 @@ import net.inferno.socialmedia.ui.main.Routes
 import net.inferno.socialmedia.ui.post.form.PostResult
 import net.inferno.socialmedia.utils.toReadableText
 import net.inferno.socialmedia.view.BackIconButton
+import net.inferno.socialmedia.view.CustomModalBottomSheet
 import net.inferno.socialmedia.view.ErrorView
 import net.inferno.socialmedia.view.LoadingView
 import net.inferno.socialmedia.view.MDDocument
@@ -103,7 +106,7 @@ import net.inferno.socialmedia.view.UserImage
 @OptIn(
     ExperimentalMaterial3Api::class,
     ExperimentalFoundationApi::class,
-    ExperimentalMaterialApi::class,
+    ExperimentalMaterialApi::class, ExperimentalLayoutApi::class,
 )
 @Composable
 fun PostDetailsUI(
@@ -350,36 +353,43 @@ fun PostDetailsUI(
                                             modifier = Modifier.weight(1f),
                                         ) {
                                             if (post.community != null) {
-                                                Text(
-                                                    post.community.community!!.name,
-                                                    fontWeight = FontWeight.Bold,
-                                                    modifier = Modifier
-                                                        .clickable {
-                                                            navController.navigate(
-                                                                Routes.community(post.community.community)
-                                                            )
-                                                        }
-                                                )
-
-                                                Text(
-                                                    buildAnnotatedString {
-                                                        append("by")
-                                                        append(" ")
-
-                                                        append("${post.publisher.firstName} ${post.publisher.lastName}")
-                                                    },
-                                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                                    fontSize = 14.sp,
-                                                    modifier = Modifier
-                                                        .clickable {
-                                                            navController.navigate(
-                                                                Routes.profile(
-                                                                    if (currentUser!!.id == post.publisher.id) null
-                                                                    else post.publisher
+                                                FlowRow(
+                                                    verticalArrangement = Arrangement.Center,
+                                                ) {
+                                                    Text(
+                                                        post.community.community!!.name,
+                                                        fontWeight = FontWeight.Bold,
+                                                        modifier = Modifier
+                                                            .clickable {
+                                                                navController.navigate(
+                                                                    Routes.community(post.community.community)
                                                                 )
-                                                            )
-                                                        }
-                                                )
+                                                            }
+                                                    )
+
+                                                    Text(" ")
+
+                                                    Text(
+                                                        buildAnnotatedString {
+                                                            append("by")
+                                                            append(" ")
+
+                                                            append("${post.publisher.firstName} ${post.publisher.lastName}")
+                                                        },
+                                                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                                        fontSize = 14.sp,
+                                                        modifier = Modifier
+                                                            .align(Alignment.CenterVertically)
+                                                            .clickable {
+                                                                navController.navigate(
+                                                                    Routes.profile(
+                                                                        if (currentUser!!.id == post.publisher.id) null
+                                                                        else post.publisher
+                                                                    )
+                                                                )
+                                                            }
+                                                    )
+                                                }
                                             } else {
                                                 Text(
                                                     "${post.publisher.firstName} ${post.publisher.lastName}",
@@ -678,7 +688,7 @@ fun PostDetailsUI(
     }
 
     if (showPostSheet) {
-        ModalBottomSheet(
+        CustomModalBottomSheet(
             onDismissRequest = {
                 showPostSheet = false
             },

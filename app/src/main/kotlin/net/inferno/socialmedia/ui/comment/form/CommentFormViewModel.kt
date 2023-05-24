@@ -4,12 +4,10 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 import net.inferno.socialmedia.data.Repository
 import net.inferno.socialmedia.model.Comment
 import net.inferno.socialmedia.model.Post
@@ -41,7 +39,7 @@ class CommentFormViewModel @Inject constructor(
     }
 
     fun getData() {
-        if(postId != null) {
+        if (postId != null) {
             getPostDetails()
         } else {
             getCommentDetails()
@@ -53,9 +51,7 @@ class CommentFormViewModel @Inject constructor(
 
         viewModelScope.launch {
             try {
-                val post = withContext(Dispatchers.IO) {
-                    repository.getPostDetails(postId!!)
-                }
+                val post = repository.getPostDetails(postId!!)
 
                 _postDataState.emit(UIState.Success(post))
             } catch (e: HttpException) {
@@ -75,9 +71,7 @@ class CommentFormViewModel @Inject constructor(
 
         viewModelScope.launch {
             try {
-                val comment = withContext(Dispatchers.IO) {
-                    repository.getCommentDetails(commentId!!)
-                }
+                val comment = repository.getCommentDetails(commentId!!)
 
                 _commentDataState.emit(UIState.Success(comment))
             } catch (e: HttpException) {
@@ -95,13 +89,11 @@ class CommentFormViewModel @Inject constructor(
 
         viewModelScope.launch {
             try {
-                val comment = withContext(Dispatchers.IO) {
-                    repository.createComment(
-                        postId!!,
-                        content,
-                        commentId,
-                    )
-                }
+                val comment = repository.createComment(
+                    postId!!,
+                    content,
+                    commentId,
+                )
 
                 _commentAddState.value = UIState.Success(null)
             } catch (e: HttpException) {
@@ -125,9 +117,7 @@ class CommentFormViewModel @Inject constructor(
             val comment = commentDataState.value.data!!
 
             try {
-                val newComment = withContext(Dispatchers.IO) {
-                    repository.updateComment(comment, content)
-                }
+                val newComment = repository.updateComment(comment, content)
 
                 _commentAddState.value = UIState.Success(null)
             } catch (e: HttpException) {

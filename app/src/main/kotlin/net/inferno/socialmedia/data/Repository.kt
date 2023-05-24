@@ -4,11 +4,15 @@ import android.content.SharedPreferences
 import androidx.core.content.edit
 import androidx.core.net.toUri
 import com.squareup.moshi.Moshi
+import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.withTimeout
+import net.inferno.socialmedia.data.di.ApplicationScope
+import net.inferno.socialmedia.data.di.DefaultDispatcher
 import net.inferno.socialmedia.data.remote.RemoteDataSource
 import net.inferno.socialmedia.model.Comment
 import net.inferno.socialmedia.model.Community
@@ -33,6 +37,8 @@ class Repository @Inject constructor(
     private val preferencesDataStore: PreferencesDataStore,
     private val preferences: SharedPreferences = preferencesDataStore.preferences,
     private val moshi: Moshi,
+    @DefaultDispatcher private val dispatcher: CoroutineDispatcher,
+    @ApplicationScope private val scope: CoroutineScope,
 ) {
     //region User
     suspend fun login(
@@ -601,7 +607,7 @@ class Repository @Inject constructor(
 
     private suspend fun <T : BaseResponse<*>> makeRequest(request: suspend () -> T): T {
         val response = withTimeout(TIMEOUT) {
-            withContext(Dispatchers.IO) {
+            withContext(dispatcher) {
                 request()
             }
         }

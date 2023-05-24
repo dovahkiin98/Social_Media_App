@@ -121,4 +121,12 @@
     <string name="deny">Deny</string>
     <string name="accept">Accept</string>
     <string name="requests">Requests</string>
+    <string name="cover_image_uploaded">Cover Image Uploaded!</string>
+    <string name="cover_image_upload_failed">Cover Image Upload failed : %1$s</string>
+    <string name="profile_image_uploaded">Profile Image Uploaded!</string>
+    <string name="profile_image_upload_failed">Profile Image Upload failed : %1$s</string>
+    <string name="post_deleted">Post Deleted</string>
+    <string name="post_deletion_failed">Post Deletion failed : %1$s</string>
+    <string name="post_added">Post Added</string>
+    <string name="post_updated">Post Updated</string>
 </resources>

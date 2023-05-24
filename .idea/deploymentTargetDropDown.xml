@@ -8,6 +8,9 @@
       <entry key="DefaultPreview (1)">
         <State />
       </entry>
+      <entry key="LoginUITest">
+        <State />
+      </entry>
       <entry key="app">
         <State>
           <targetSelectedWithDropDown>
@@ -23,6 +26,9 @@
           </targetSelectedWithDropDown>
           <timeTargetWasSelectedWithDropDown value="2023-05-10T21:08:00.556328700Z" />
         </State>
+      </entry>
+      <entry key="testLoginButton()">
+        <State />
       </entry>
     </value>
   </component>

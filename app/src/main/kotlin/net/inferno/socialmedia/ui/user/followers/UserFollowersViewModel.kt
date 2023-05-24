@@ -4,11 +4,9 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 import net.inferno.socialmedia.data.Repository
 import net.inferno.socialmedia.model.UIState
 import net.inferno.socialmedia.model.User
@@ -36,9 +34,7 @@ class UserFollowersViewModel @Inject constructor(
             _uiState.emit(if (isRefreshing) _uiState.value.refresh() else UIState.Loading())
 
             try {
-                val followers = withContext(Dispatchers.IO) {
-                    repository.getUserFollowers(userId)
-                }
+                val followers = repository.getUserFollowers(userId)
 
                 _uiState.emit(UIState.Success(followers))
             } catch (e: HttpException) {
@@ -51,9 +47,7 @@ class UserFollowersViewModel @Inject constructor(
 
     fun toggleFollow(user: User) {
         viewModelScope.launch {
-            withContext(Dispatchers.IO) {
-                repository.toggleFollow(user)
-            }
+            repository.toggleFollow(user)
         }
     }
 }

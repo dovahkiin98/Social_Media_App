@@ -25,6 +25,7 @@ import retrofit2.http.Path
 import retrofit2.http.Query
 
 interface SocialMediaService {
+    //region user
     @GET("user/login")
     suspend fun login(
         @Query("email") email: String,
@@ -35,6 +36,11 @@ interface SocialMediaService {
     suspend fun signup(
         @Body request: SignupRequest,
     ): LoginResponse
+
+    @GET("get-posts")
+    suspend fun getNewsFeed(
+
+    ): BaseResponse<List<Post>>
 
     @GET("user/{userId}")
     suspend fun getUser(
@@ -74,6 +80,7 @@ interface SocialMediaService {
     suspend fun toggleFollow(
         @Query("userId") userId: String,
     ): BaseResponse<UserDetails>
+    //endregion
 
     //region Posts
     @GET("posts")

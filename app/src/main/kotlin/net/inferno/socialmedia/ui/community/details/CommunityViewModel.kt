@@ -4,12 +4,10 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 import net.inferno.socialmedia.data.Repository
 import net.inferno.socialmedia.model.CommunityDetails
 import net.inferno.socialmedia.model.CommunityPost
@@ -53,9 +51,7 @@ class CommunityViewModel @Inject constructor(
             delay(1_000)
 
             try {
-                val community = withContext(Dispatchers.IO) {
-                    repository.getCommunityDetails(communityId)
-                }
+                val community = repository.getCommunityDetails(communityId)
 
                 _communityDataState.emit(UIState.Success(community))
             } catch (e: HttpException) {
@@ -75,9 +71,7 @@ class CommunityViewModel @Inject constructor(
             delay(1_000)
 
             try {
-                val posts = withContext(Dispatchers.IO) {
-                    repository.getCommunityPosts(communityId)
-                }
+                val posts = repository.getCommunityPosts(communityId)
 
                 _communityPostsState.emit(UIState.Success(posts))
             } catch (e: HttpException) {
@@ -90,9 +84,7 @@ class CommunityViewModel @Inject constructor(
 
     fun toggleFollow(user: User) {
         viewModelScope.launch {
-            withContext(Dispatchers.IO) {
-                repository.toggleFollow(user)
-            }
+            repository.toggleFollow(user)
         }
     }
 
@@ -103,9 +95,7 @@ class CommunityViewModel @Inject constructor(
             try {
                 val community = _communityDataState.value.data!!
 
-                withContext(Dispatchers.IO) {
-                    repository.uploadCommunityCoverImage(community, croppedImage)
-                }
+                repository.uploadCommunityCoverImage(community, croppedImage)
 
                 _communityDataState.emit(UIState.Success(community))
                 _coverImageUploadState.emit(UIState.Success(null))
@@ -126,9 +116,7 @@ class CommunityViewModel @Inject constructor(
             val posts = _communityPostsState.value.data!!.toMutableList()
             val index = posts.indexOf(post)
 
-            val newPost = withContext(Dispatchers.IO) {
-                repository.likePost(post.post)
-            }
+            val newPost = repository.likePost(post.post)
 
 //            posts[index] = newPost
 
@@ -144,9 +132,7 @@ class CommunityViewModel @Inject constructor(
 //            val index = posts.indexOf(post)
 
             try {
-                withContext(Dispatchers.IO) {
-                    repository.deletePost(post)
-                }
+                repository.deletePost(post)
 
 //                posts.removeAt(index)
 

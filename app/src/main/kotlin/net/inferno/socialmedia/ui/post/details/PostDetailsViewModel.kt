@@ -4,12 +4,10 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 import net.inferno.socialmedia.data.Repository
 import net.inferno.socialmedia.model.Comment
 import net.inferno.socialmedia.model.Post
@@ -51,9 +49,7 @@ class PostDetailsViewModel @Inject constructor(
             delay(1_000)
 
             try {
-                val post = withContext(Dispatchers.IO) {
-                    repository.getPostDetails(postId)
-                }
+                val post = repository.getPostDetails(postId)
 
                 _postDataState.emit(UIState.Success(post))
             } catch (e: HttpException) {
@@ -73,9 +69,7 @@ class PostDetailsViewModel @Inject constructor(
             delay(1_000)
 
             try {
-                val comments = withContext(Dispatchers.IO) {
-                    repository.getPostComments(postId)
-                }
+                val comments = repository.getPostComments(postId)
 
                 _postCommentsState.emit(UIState.Success(comments))
             } catch (e: HttpException) {
@@ -90,9 +84,7 @@ class PostDetailsViewModel @Inject constructor(
         viewModelScope.launch {
             val post = _postDataState.value.data!!
 
-            val newPost = withContext(Dispatchers.IO) {
-                repository.likePost(post)
-            }
+            val newPost = repository.likePost(post)
 
             _postDataState.emit(UIState.Success(newPost))
         }
@@ -105,9 +97,7 @@ class PostDetailsViewModel @Inject constructor(
             val post = _postDataState.value.data!!
 
             try {
-                val newPost = withContext(Dispatchers.IO) {
-                    repository.deletePost(post)
-                }
+                val newPost = repository.deletePost(post)
 
                 _postDeletionState.emit(UIState.Success(null))
             } catch (e: HttpException) {
@@ -126,9 +116,7 @@ class PostDetailsViewModel @Inject constructor(
         viewModelScope.launch {
             val comments = _postCommentsState.value.data!!.toMutableList()
 
-            val newComment = withContext(Dispatchers.IO) {
-                repository.likeComment(comment)
-            }
+            val newComment = repository.likeComment(comment)
 
             getPostComments()
 
@@ -159,9 +147,7 @@ class PostDetailsViewModel @Inject constructor(
             try {
                 val comments = postCommentsState.value.data!!
 
-                withContext(Dispatchers.IO) {
-                    repository.deleteComment(comment)
-                }
+                repository.deleteComment(comment)
 
 //                val originComment = findOriginalComment(comments, comment)
 

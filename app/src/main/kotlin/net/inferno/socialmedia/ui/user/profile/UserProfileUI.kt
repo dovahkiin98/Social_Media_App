@@ -18,14 +18,17 @@ import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.calculateEndPadding
 import androidx.compose.foundation.layout.calculateStartPadding
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
@@ -99,6 +102,7 @@ import net.inferno.socialmedia.ui.post.form.PostResult
 import net.inferno.socialmedia.utils.CropImageContract
 import net.inferno.socialmedia.utils.getFilePathFromUri
 import net.inferno.socialmedia.view.BackIconButton
+import net.inferno.socialmedia.view.CustomModalBottomSheet
 import net.inferno.socialmedia.view.ErrorView
 import net.inferno.socialmedia.view.LoadingView
 import net.inferno.socialmedia.view.PostAction
@@ -213,7 +217,7 @@ fun UserProfileUI(
         if (coverImageUpload is UIState.Success) {
             coroutineScope.launch {
                 snackbarHostState.showSnackbar(
-                    "Cover Image Uploaded!",
+                    context.getString(R.string.cover_image_uploaded),
                     withDismissAction = true,
                 )
             }
@@ -224,7 +228,10 @@ fun UserProfileUI(
 
             coroutineScope.launch {
                 snackbarHostState.showSnackbar(
-                    "Cover Image Upload failed : ${error.message}",
+                    context.getString(
+                        R.string.cover_image_upload_failed,
+                        error.message ?: error.toString(),
+                    ),
                     withDismissAction = true,
                 )
             }
@@ -235,7 +242,7 @@ fun UserProfileUI(
         if (profileImageUpload is UIState.Success) {
             coroutineScope.launch {
                 snackbarHostState.showSnackbar(
-                    "Profile Image Uploaded!",
+                    context.getString(R.string.profile_image_uploaded),
                     withDismissAction = true,
                 )
             }
@@ -246,7 +253,10 @@ fun UserProfileUI(
 
             coroutineScope.launch {
                 snackbarHostState.showSnackbar(
-                    "Profile Image Upload failed : ${error.message}",
+                    context.getString(
+                        R.string.profile_image_upload_failed,
+                        error.message ?: error.toString(),
+                    ),
                     withDismissAction = true,
                 )
             }
@@ -254,22 +264,25 @@ fun UserProfileUI(
     }
 
     LaunchedEffect(postDeletionState) {
+        if (postDeletionState is UIState.Success) {
+            coroutineScope.launch {
+                snackbarHostState.showSnackbar(
+                    message = context.getString(R.string.post_deleted),
+                    withDismissAction = true
+                )
+            }
+        }
+
         if (postDeletionState is UIState.Failure) {
             val error = (postDeletionState as UIState.Failure).error!!
 
             coroutineScope.launch {
                 snackbarHostState.showSnackbar(
-                    message = error.message ?: error.toString(),
+                    context.getString(
+                        R.string.profile_image_upload_failed,
+                        error.message ?: error.toString(),
+                    ),
                     withDismissAction = true,
-                )
-            }
-        }
-
-        if (postDeletionState is UIState.Success) {
-            coroutineScope.launch {
-                snackbarHostState.showSnackbar(
-                    message = "Post Deleted",
-                    withDismissAction = true
                 )
             }
         }
@@ -299,11 +312,11 @@ fun UserProfileUI(
     }?.collectAsState()
 
     LaunchedEffect(postResult) {
-        if(postResult != null) {
+        if (postResult != null) {
             if (postResult.value == PostResult.Added) {
                 coroutineScope.launch {
                     snackbarHostState.showSnackbar(
-                        message = "Post Added",
+                        message = context.getString(R.string.post_added),
                         withDismissAction = true
                     )
                 }
@@ -312,7 +325,7 @@ fun UserProfileUI(
             if (postResult.value == PostResult.Updated) {
                 coroutineScope.launch {
                     snackbarHostState.showSnackbar(
-                        message = "Post Updated",
+                        message = context.getString(R.string.post_updated),
                         withDismissAction = true
                     )
                 }
@@ -321,7 +334,7 @@ fun UserProfileUI(
             if (postResult.value == PostResult.Deleted) {
                 coroutineScope.launch {
                     snackbarHostState.showSnackbar(
-                        message = "Post Deleted",
+                        message = context.getString(R.string.post_deleted),
                         withDismissAction = true
                     )
                 }
@@ -353,7 +366,7 @@ fun UserProfileUI(
             SnackbarHost(snackbarHostState)
         },
         floatingActionButton = {
-            if(user.data != null && user.data!! == currentUser) {
+            if (user.data != null && user.data!! == currentUser) {
                 ExtendedFloatingActionButton(
                     text = {
                         Text(stringResource(id = R.string.new_post))
@@ -476,7 +489,7 @@ fun UserProfileUI(
                                         pop()
 
                                         append(" ")
-                                        append("Following")
+                                        append(stringResource(id = R.string.following))
                                     },
                                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                                     fontSize = 14.sp,
@@ -502,7 +515,7 @@ fun UserProfileUI(
                                         pop()
 
                                         append(" ")
-                                        append("Followers")
+                                        append(stringResource(id = R.string.followers))
                                     },
                                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                                     fontSize = 14.sp,
@@ -583,6 +596,7 @@ fun UserProfileUI(
                                         PostAction.Delete -> {
                                             showPostDeletionDialog = true
                                         }
+
                                         PostAction.Edit -> {
                                             navController.navigate(Routes.addPost(post))
                                         }
@@ -649,7 +663,7 @@ fun UserProfileUI(
 
 
     if (showProfileImageSheet) {
-        ModalBottomSheet(
+        CustomModalBottomSheet(
             onDismissRequest = {
                 showProfileImageSheet = false
             },
@@ -675,7 +689,7 @@ fun UserProfileUI(
                         navController.navigate(Routes.image(user.data!!.profileImageUrl!!))
                     }
             )
-            if(user.data!! == currentUser) {
+            if (user.data!! == currentUser) {
                 ListItem(
                     leadingContent = {
                         Icon(
@@ -704,7 +718,7 @@ fun UserProfileUI(
     }
 
     if (showCoverImageSheet) {
-        ModalBottomSheet(
+        CustomModalBottomSheet(
             onDismissRequest = {
                 showCoverImageSheet = false
             },
@@ -730,7 +744,7 @@ fun UserProfileUI(
                         navController.navigate(Routes.image(user.data!!.coverImageUrl!!))
                     }
             )
-            if(user.data!! == currentUser) {
+            if (user.data!! == currentUser) {
                 ListItem(
                     leadingContent = {
                         Icon(

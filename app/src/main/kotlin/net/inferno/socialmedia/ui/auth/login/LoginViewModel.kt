@@ -13,8 +13,6 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
-import kotlinx.coroutines.withTimeout
 import net.inferno.socialmedia.App
 import net.inferno.socialmedia.BuildConfig
 import net.inferno.socialmedia.data.Repository
@@ -48,14 +46,10 @@ class LoginViewModel @Inject constructor(
 
         viewModelScope.launch(Dispatchers.Main.immediate) {
             try {
-                withTimeout(Repository.TIMEOUT) {
-                    withContext(Dispatchers.IO) {
-                        repository.login(
-                            email = emailValue.value.trim(),
-                            password = passwordValue.value.trim(),
-                        )
-                    }
-                }
+                repository.login(
+                    email = emailValue.value.trim(),
+                    password = passwordValue.value.trim(),
+                )
 
                 _uiState.emit(UIState.Success(null))
             } catch (e: HttpException) {

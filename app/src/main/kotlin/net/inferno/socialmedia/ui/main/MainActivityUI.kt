@@ -4,11 +4,10 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.NavHostController
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -17,43 +16,38 @@ import androidx.navigation.navArgument
 import net.inferno.socialmedia.data.PreferencesDataStore
 import net.inferno.socialmedia.model.Community
 import net.inferno.socialmedia.ui.apps.AppsUI
+import net.inferno.socialmedia.ui.auth.login.LoginUI
+import net.inferno.socialmedia.ui.auth.register.RegisterUI
 import net.inferno.socialmedia.ui.comment.form.CommentForm
 import net.inferno.socialmedia.ui.community.details.CommunityUI
+import net.inferno.socialmedia.ui.community.members.CommunityMembersUI
+import net.inferno.socialmedia.ui.community.requests.CommunityRequestsUI
+import net.inferno.socialmedia.ui.home.HomeUI
+import net.inferno.socialmedia.ui.image.ImageUI
+import net.inferno.socialmedia.ui.post.details.PostDetailsUI
+import net.inferno.socialmedia.ui.post.form.PostForm
 import net.inferno.socialmedia.ui.user.editProfile.EditProfileUI
 import net.inferno.socialmedia.ui.user.followers.UserFollowersUI
 import net.inferno.socialmedia.ui.user.followes.UserFollowesUI
-import net.inferno.socialmedia.ui.home.HomeUI
-import net.inferno.socialmedia.ui.image.ImageUI
-import net.inferno.socialmedia.ui.auth.login.LoginUI
-import net.inferno.socialmedia.ui.post.details.PostDetailsUI
-import net.inferno.socialmedia.ui.post.form.PostForm
 import net.inferno.socialmedia.ui.user.profile.UserProfileUI
-import net.inferno.socialmedia.ui.auth.register.RegisterUI
-import net.inferno.socialmedia.ui.community.members.CommunityMembersUI
-import net.inferno.socialmedia.ui.community.requests.CommunityRequestsUI
 
 @Composable
 fun MainActivityUI(
     mainViewModel: MainViewModel = viewModel(),
+    navController: NavHostController = rememberNavController(),
+    preferences: PreferencesDataStore,
 ) {
-    val navController = rememberNavController()
-    val context = LocalContext.current
-
-    val preferences = remember {
-        PreferencesDataStore(context)
-    }
-
 //    val start = Routes.LOGIN
 
     val start = if (preferences.isUserLoggedIn) Routes.HOME else Routes.LOGIN
 
     var navigated by rememberSaveable { mutableStateOf(false) }
-//    if (preferences.isUserLoggedIn && !navigated) {
-//        navigated = true
-//        LaunchedEffect(Unit) {
-//            navController.navigate(Routes.profile(null))
-//        }
-//    }
+    if (preferences.isUserLoggedIn && !navigated) {
+        navigated = true
+        LaunchedEffect(Unit) {
+            navController.navigate(Routes.profile(null))
+        }
+    }
 //    if (preferences.isUserLoggedIn && !navigated) {
 //        navigated = true
 //        LaunchedEffect(Unit) {
@@ -68,20 +62,20 @@ fun MainActivityUI(
 //            )
 //        }
 //    }
-    if (preferences.isUserLoggedIn && !navigated) {
-        navigated = true
-        LaunchedEffect(Unit) {
-            navController.navigate(
-                Routes.community(
-                    Community(
-                        id = "6463530421e45374a1a4eb82",
-                        name = "abc",
-                        coverImageName = null,
-                    )
-                )
-            )
-        }
-    }
+//    if (preferences.isUserLoggedIn && !navigated) {
+//        navigated = true
+//        LaunchedEffect(Unit) {
+//            navController.navigate(
+//                Routes.community(
+//                    Community(
+//                        id = "6463530421e45374a1a4eb82",
+//                        name = "abc",
+//                        coverImageName = null,
+//                    )
+//                )
+//            )
+//        }
+//    }
 
     NavHost(
         navController,

@@ -37,9 +37,7 @@ class CommunityRequestsViewModel @Inject constructor(
             _uiState.emit(if (isRefreshing) _uiState.value.refresh() else UIState.Loading())
 
             try {
-                val community = withContext(Dispatchers.IO) {
-                    repository.getCommunityDetails(communityId)
-                }
+                val community = repository.getCommunityDetails(communityId)
 
                 _uiState.emit(UIState.Success(community))
             } catch (e: HttpException) {
@@ -52,17 +50,11 @@ class CommunityRequestsViewModel @Inject constructor(
 
     fun acceptUser(user: User) {
         viewModelScope.launch {
-            withContext(Dispatchers.IO) {
-
-            }
         }
     }
 
     fun denyUser(user: User) {
         viewModelScope.launch {
-            withContext(Dispatchers.IO) {
-
-            }
         }
     }
 }

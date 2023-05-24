@@ -36,9 +36,7 @@ class AppsViewModel @Inject constructor(
             _uiState.emit(UIState.Loading())
 
             try {
-                val packages = withContext(Dispatchers.IO) {
-                    packageManager.getInstalledApplications(PackageManager.GET_META_DATA)
-                }
+                val packages = packageManager.getInstalledApplications(PackageManager.GET_META_DATA)
 
                 val userPackages = mutableListOf<UserApp>()
 

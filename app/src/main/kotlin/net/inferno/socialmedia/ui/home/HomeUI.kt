@@ -67,7 +67,7 @@ import net.inferno.socialmedia.model.UserDetails
 import net.inferno.socialmedia.ui.main.Routes
 import net.inferno.socialmedia.view.UserImage
 
-@OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomeUI(
     navController: NavController,
@@ -254,7 +254,9 @@ fun HomeUI(
 
     if (showLogoutDialog) {
         AlertDialog(
-            onDismissRequest = {},
+            onDismissRequest = {
+                showLogoutDialog = false
+            },
             confirmButton = {
                 TextButton(onClick = {
                     viewModel.logout()
@@ -355,7 +357,7 @@ fun DrawerHeader(
                     pop()
 
                     append(" ")
-                    append("Following")
+                    append(stringResource(id = R.string.following))
                 },
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 fontSize = 14.sp,
@@ -381,7 +383,7 @@ fun DrawerHeader(
                     pop()
 
                     append(" ")
-                    append("Followers")
+                    append(stringResource(id = R.string.followers))
                 },
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 fontSize = 14.sp,
