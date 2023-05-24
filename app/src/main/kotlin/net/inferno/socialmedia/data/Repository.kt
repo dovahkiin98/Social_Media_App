@@ -82,6 +82,23 @@ class Repository @Inject constructor(
         saveUser(response.data!!)
     }
 
+    suspend fun getNewsFeed(): List<Post> {
+        val response = makeRequest {
+            remoteDataSource.getNewsFeed(100)
+        }
+
+        val posts = response.data!!
+
+        for (post in posts) {
+            post.files.forEach { image ->
+                image.imageUrl = getPostImage(post, image)
+            }
+            post.publisher.profileImageUrl = getUserProfileImage(post.publisher)
+        }
+
+        return posts
+    }
+
     fun getSavedUserFlow() = preferencesDataStore.savedUser.map {
         if (!it.isNullOrBlank()) {
             moshi.adapter(UserDetails::class.java).fromJson(it)!!

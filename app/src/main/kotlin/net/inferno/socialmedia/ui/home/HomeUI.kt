@@ -1,6 +1,7 @@
 package net.inferno.socialmedia.ui.home
 
 import androidx.activity.compose.BackHandler
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
@@ -13,6 +14,8 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
@@ -44,6 +47,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
@@ -63,11 +67,16 @@ import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import kotlinx.coroutines.launch
 import net.inferno.socialmedia.R
+import net.inferno.socialmedia.model.Post
 import net.inferno.socialmedia.model.UserDetails
 import net.inferno.socialmedia.ui.main.Routes
+import net.inferno.socialmedia.view.ErrorView
+import net.inferno.socialmedia.view.LoadingView
+import net.inferno.socialmedia.view.PostAction
+import net.inferno.socialmedia.view.PostItem
 import net.inferno.socialmedia.view.UserImage
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
 fun HomeUI(
     navController: NavController,
@@ -82,11 +91,13 @@ fun HomeUI(
     val topAppBarState = rememberTopAppBarState()
     val topAppBarScrollBehavior = TopAppBarDefaults.pinnedScrollBehavior(topAppBarState)
 
-    var showLogoutDialog by rememberSaveable {
-        mutableStateOf(false)
-    }
+    var selectedPost: Post? by remember { mutableStateOf(null) }
+    var showPostDeletionDialog by rememberSaveable { mutableStateOf(false) }
+
+    var showLogoutDialog by rememberSaveable { mutableStateOf(false) }
 
     val userState by viewModel.userDataState.collectAsState()
+    val postsState by viewModel.postsDataState.collectAsState()
 
     BackHandler(drawerState.isOpen) {
         coroutineScope.launch {
@@ -245,10 +256,74 @@ fun HomeUI(
             modifier = Modifier
                 .nestedScroll(topAppBarScrollBehavior.nestedScrollConnection)
         ) { paddingValues ->
-            Box(
-                modifier = Modifier
-                    .padding(paddingValues)
-            )
+            if (postsState.data != null) {
+                val posts = postsState.data!!
+                val currentUser = userState.data!!
+
+                LazyColumn(
+                    contentPadding = paddingValues,
+                ) {
+                    items(posts) {
+                        PostItem(
+                            currentUserId = currentUser.id,
+                            post = it,
+                            onImageClick = { image ->
+                                navController.navigate(Routes.image(image.imageUrl!!))
+                            },
+                            onLiked = { post ->
+                                viewModel.likePost(post)
+                            },
+                            onOptionsClick = { post, action ->
+                                selectedPost = post
+
+                                when (action) {
+                                    PostAction.Delete -> {
+                                        showPostDeletionDialog = true
+                                    }
+
+                                    PostAction.Edit -> {
+                                        navController.navigate(Routes.addPost(post))
+                                    }
+                                }
+                            },
+                            onClick = { post ->
+                                navController.navigate(Routes.post(post))
+                            },
+                            onUserClick = { user ->
+                                navController.navigate(Routes.profile(if (currentUser.id == user.id) null else user))
+                            },
+                            modifier = Modifier
+                                .padding(vertical = 8.dp)
+                                .animateItemPlacement(),
+                        )
+                    }
+                }
+            } else if (postsState.error != null) {
+                val error = postsState.error!!
+
+                Box(
+                    contentAlignment = Alignment.Center,
+                    modifier = Modifier
+                        .padding(36.dp)
+                        .padding(paddingValues)
+                ) {
+                    ErrorView(
+                        error = error,
+                        onRetry = {
+                            viewModel.getNewsFeed()
+                        }
+                    )
+                }
+            } else {
+                Box(
+                    contentAlignment = Alignment.Center,
+                    modifier = Modifier
+                        .padding(36.dp)
+                        .padding(paddingValues)
+                ) {
+                    LoadingView()
+                }
+            }
         }
     }
 
@@ -279,6 +354,35 @@ fun HomeUI(
             },
             text = {
                 Text(stringResource(id = R.string.logout_message))
+            }
+        )
+    }
+
+    if (showPostDeletionDialog) {
+        AlertDialog(
+            onDismissRequest = {
+                showPostDeletionDialog = false
+            },
+            confirmButton = {
+                TextButton(onClick = {
+                    viewModel.deletePost(selectedPost!!)
+                    showPostDeletionDialog = false
+                }) {
+                    Text(stringResource(id = R.string.yes))
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = {
+                    showPostDeletionDialog = false
+                }) {
+                    Text(stringResource(id = R.string.no))
+                }
+            },
+            title = {
+                Text(stringResource(id = R.string.delete_post))
+            },
+            text = {
+                Text(stringResource(id = R.string.delete_post_message))
             }
         )
     }

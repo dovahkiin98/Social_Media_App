@@ -4,6 +4,7 @@ import dagger.Module
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
 import net.inferno.socialmedia.model.Comment
+import net.inferno.socialmedia.model.Post
 import net.inferno.socialmedia.model.UserImage
 import net.inferno.socialmedia.model.request.SignupRequest
 import net.inferno.socialmedia.model.response.BaseResponse
@@ -24,6 +25,10 @@ class RemoteDataSource @Inject constructor(
     override suspend fun signup(
         request: SignupRequest,
     ) = remoteService.signup(request)
+
+    override suspend fun getNewsFeed(
+        pageSize: Int,
+    ) = remoteService.getNewsFeed(pageSize)
 
     override suspend fun getUser(
         userId: String,

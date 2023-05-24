@@ -39,7 +39,7 @@ interface SocialMediaService {
 
     @GET("get-posts")
     suspend fun getNewsFeed(
-
+        @Query("limit") pageSize: Int,
     ): BaseResponse<List<Post>>
 
     @GET("user/{userId}")
