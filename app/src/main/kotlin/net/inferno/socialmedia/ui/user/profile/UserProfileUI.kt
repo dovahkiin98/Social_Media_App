@@ -18,17 +18,14 @@ import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.calculateEndPadding
 import androidx.compose.foundation.layout.calculateStartPadding
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
@@ -41,15 +38,14 @@ import androidx.compose.material.pullrefresh.PullRefreshIndicator
 import androidx.compose.material.pullrefresh.pullRefresh
 import androidx.compose.material.pullrefresh.rememberPullRefreshState
 import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ElevatedButton
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.OutlinedIconButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
@@ -98,16 +94,17 @@ import net.inferno.socialmedia.model.Post
 import net.inferno.socialmedia.model.UIState
 import net.inferno.socialmedia.ui.cropImage.CropImageActivity
 import net.inferno.socialmedia.ui.main.Routes
+import net.inferno.socialmedia.ui.post.PostAction
+import net.inferno.socialmedia.ui.post.PostItem
 import net.inferno.socialmedia.ui.post.form.PostResult
 import net.inferno.socialmedia.utils.CropImageContract
 import net.inferno.socialmedia.utils.getFilePathFromUri
 import net.inferno.socialmedia.view.BackIconButton
 import net.inferno.socialmedia.view.CustomModalBottomSheet
 import net.inferno.socialmedia.view.ErrorView
+import net.inferno.socialmedia.view.LoadingDialog
 import net.inferno.socialmedia.view.LoadingView
-import net.inferno.socialmedia.view.PostAction
-import net.inferno.socialmedia.view.PostItem
-import net.inferno.socialmedia.view.UserImage
+import net.inferno.socialmedia.view.UserAvatar
 import java.io.File
 
 @OptIn(
@@ -176,7 +173,6 @@ fun UserProfileUI(
     val posts by viewModel.userPostsState.collectAsState()
     val coverImageUpload by viewModel.coverImageUploadState.collectAsState()
     val profileImageUpload by viewModel.profileImageUploadState.collectAsState()
-    val postDeletionState by viewModel.postDeletionState.collectAsState()
 
     val topAppBarState = rememberTopAppBarState()
     val topAppBarScrollBehavior = TopAppBarDefaults.pinnedScrollBehavior(topAppBarState)
@@ -263,6 +259,7 @@ fun UserProfileUI(
         }
     }
 
+    val postDeletionState by viewModel.postDeletionState.collectAsState()
     LaunchedEffect(postDeletionState) {
         if (postDeletionState is UIState.Success) {
             coroutineScope.launch {
@@ -288,8 +285,30 @@ fun UserProfileUI(
         }
     }
 
+    val startConversationState by viewModel.startConversationState.collectAsState()
+    LaunchedEffect(startConversationState) {
+        if (startConversationState is UIState.Success) {
+            val conversationId = startConversationState!!.data!!
+
+            navController.navigate(Routes.conversation(conversationId))
+        }
+
+        if (startConversationState is UIState.Failure) {
+            val error = (startConversationState as UIState.Failure).error!!
+
+            coroutineScope.launch {
+                snackbarHostState.showSnackbar(
+                    context.getString(
+                        R.string.profile_image_upload_failed,
+                        error.message ?: error.toString(),
+                    ),
+                    withDismissAction = true,
+                )
+            }
+        }
+    }
+
     val onBackPressed = {
-        println(lazyListState.layoutInfo)
         if (lazyListState.firstVisibleItemIndex == 0 && lazyListState.firstVisibleItemScrollOffset == 0) {
             navController.popBackStack()
         } else {
@@ -413,9 +432,8 @@ fun UserProfileUI(
                                         .fillMaxWidth()
                                         .height(imageHeight)
                                         .clickable {
-                                            showCoverImageSheet = true
-                                            coroutineScope.launch {
-                                                coverImageSheetState.show()
+                                            if (userData.coverImageUrl != null || userData == currentUser) {
+                                                showCoverImageSheet = true
                                             }
                                         }
                                 ) {
@@ -445,23 +463,16 @@ fun UserProfileUI(
                                         .clip(CircleShape)
                                         .background(MaterialTheme.colorScheme.surface),
                                 ) {
-                                    UserImage(
+                                    UserAvatar(
+                                        user = userData,
                                         onClick = {
-                                            showProfileImageSheet = true
+                                            if (userData.profileImageUrl != null || userData == currentUser) {
+                                                showProfileImageSheet = true
+                                            }
                                         },
                                         modifier = Modifier
                                             .size(128.dp)
-                                    ) {
-                                        AsyncImage(
-                                            model = ImageRequest.Builder(LocalContext.current)
-                                                .data(userData.profileImageUrl)
-                                                .crossfade(true)
-                                                .placeholder(ColorDrawable(Color.Red.toArgb()))
-                                                .build(),
-                                            contentDescription = null,
-                                            contentScale = ContentScale.FillWidth,
-                                        )
-                                    }
+                                    )
                                 }
                             }
 
@@ -529,35 +540,50 @@ fun UserProfileUI(
                             }
 
                             if (viewModel.userId != null) {
-                                if (followingState) {
-                                    OutlinedButton(
-                                        onClick = {
-                                            viewModel.toggleFollow(userData)
-                                            followingState = !followingState
-                                        },
-                                        contentPadding = PaddingValues(
-                                            horizontal = 12.dp,
-                                        ),
-                                        modifier = Modifier
-                                            .padding(8.dp)
-                                            .fillMaxWidth()
-                                    ) {
-                                        Text(stringResource(id = R.string.unfollow))
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
+                                ) {
+                                    if (followingState) {
+                                        OutlinedButton(
+                                            onClick = {
+                                                viewModel.toggleFollow(userData)
+                                                followingState = !followingState
+                                            },
+                                            contentPadding = PaddingValues(
+                                                horizontal = 12.dp,
+                                            ),
+                                            modifier = Modifier
+                                                .padding(8.dp)
+                                                .weight(1f)
+                                        ) {
+                                            Text(stringResource(id = R.string.unfollow))
+                                        }
+                                    } else {
+                                        ElevatedButton(
+                                            onClick = {
+                                                viewModel.toggleFollow(userData)
+                                                followingState = !followingState
+                                            },
+                                            contentPadding = PaddingValues(
+                                                horizontal = 12.dp,
+                                            ),
+                                            modifier = Modifier
+                                                .padding(8.dp)
+                                                .weight(1f)
+                                        ) {
+                                            Text(stringResource(id = R.string.follow))
+                                        }
                                     }
-                                } else {
-                                    ElevatedButton(
+
+                                    OutlinedIconButton(
                                         onClick = {
-                                            viewModel.toggleFollow(userData)
-                                            followingState = !followingState
-                                        },
-                                        contentPadding = PaddingValues(
-                                            horizontal = 12.dp,
-                                        ),
-                                        modifier = Modifier
-                                            .padding(8.dp)
-                                            .fillMaxWidth()
+                                            viewModel.startConversation()
+                                        }
                                     ) {
-                                        Text(stringResource(id = R.string.follow))
+                                        Icon(
+                                            painterResource(id = R.drawable.ic_message),
+                                            null,
+                                        )
                                     }
                                 }
                             } else {
@@ -579,7 +605,7 @@ fun UserProfileUI(
                     }
 
                     if (posts.data != null) {
-                        items(posts.data!!) {
+                        items(posts.data!!, key = { it.id }) {
                             PostItem(
                                 currentUserId = currentUser!!.id,
                                 post = it,
@@ -588,6 +614,9 @@ fun UserProfileUI(
                                 },
                                 onLiked = { post ->
                                     viewModel.likePost(post)
+                                },
+                                onDisliked = { post ->
+                                    viewModel.dislikePost(post)
                                 },
                                 onOptionsClick = { post, action ->
                                     selectedPost = post
@@ -600,6 +629,8 @@ fun UserProfileUI(
                                         PostAction.Edit -> {
                                             navController.navigate(Routes.addPost(post))
                                         }
+
+                                        else -> {}
                                     }
                                 },
                                 onClick = { post ->
@@ -669,26 +700,29 @@ fun UserProfileUI(
             },
             sheetState = profileImageSheetState,
         ) {
-            ListItem(
-                leadingContent = {
-                    Icon(
-                        painterResource(id = R.drawable.ic_image),
-                        contentDescription = null,
-                    )
-                },
-                headlineContent = {
-                    Text(stringResource(id = R.string.view_profile_image))
-                },
-                modifier = Modifier
-                    .clickable {
-                        coroutineScope.launch {
-                            profileImageSheetState.hide()
-                            showProfileImageSheet = false
-                        }
+            if (user.data!!.profileImageUrl != null) {
+                ListItem(
+                    leadingContent = {
+                        Icon(
+                            painterResource(id = R.drawable.ic_image),
+                            contentDescription = null,
+                        )
+                    },
+                    headlineContent = {
+                        Text(stringResource(id = R.string.view_profile_image))
+                    },
+                    modifier = Modifier
+                        .clickable {
+                            coroutineScope.launch {
+                                profileImageSheetState.hide()
+                                showProfileImageSheet = false
+                            }
 
-                        navController.navigate(Routes.image(user.data!!.profileImageUrl!!))
-                    }
-            )
+                            navController.navigate(Routes.image(user.data!!.profileImageUrl!!))
+                        }
+                )
+            }
+
             if (user.data!! == currentUser) {
                 ListItem(
                     leadingContent = {
@@ -724,26 +758,28 @@ fun UserProfileUI(
             },
             sheetState = coverImageSheetState,
         ) {
-            ListItem(
-                leadingContent = {
-                    Icon(
-                        painterResource(id = R.drawable.ic_image),
-                        contentDescription = null,
-                    )
-                },
-                headlineContent = {
-                    Text(stringResource(id = R.string.view_profile_cover))
-                },
-                modifier = Modifier
-                    .clickable {
-                        coroutineScope.launch {
-                            coverImageSheetState.hide()
-                            showCoverImageSheet = false
-                        }
+            if (user.data!!.coverImageUrl != null) {
+                ListItem(
+                    leadingContent = {
+                        Icon(
+                            painterResource(id = R.drawable.ic_image),
+                            contentDescription = null,
+                        )
+                    },
+                    headlineContent = {
+                        Text(stringResource(id = R.string.view_profile_cover))
+                    },
+                    modifier = Modifier
+                        .clickable {
+                            coroutineScope.launch {
+                                coverImageSheetState.hide()
+                                showCoverImageSheet = false
+                            }
 
-                        navController.navigate(Routes.image(user.data!!.coverImageUrl!!))
-                    }
-            )
+                            navController.navigate(Routes.image(user.data!!.coverImageUrl!!))
+                        }
+                )
+            }
             if (user.data!! == currentUser) {
                 ListItem(
                     leadingContent = {
@@ -773,18 +809,13 @@ fun UserProfileUI(
     }
 
     if (showUploadingDialog) {
-        AlertDialog(onDismissRequest = {}) {
-            Row {
-                CircularProgressIndicator()
-
-                Spacer(Modifier.width(24.dp))
-
+        LoadingDialog(
+            text = {
                 Text(
                     stringResource(id = R.string.uploading_image) + "...",
-                    modifier = Modifier.weight(1f),
                 )
-            }
-        }
+            },
+        )
     }
 
     if (showPostDeletionDialog) {

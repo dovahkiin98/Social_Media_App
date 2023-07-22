@@ -3,13 +3,17 @@ package net.inferno.socialmedia.data.remote
 import net.inferno.socialmedia.model.Comment
 import net.inferno.socialmedia.model.CommunityDetails
 import net.inferno.socialmedia.model.CommunityPost
+import net.inferno.socialmedia.model.Conversation
+import net.inferno.socialmedia.model.Message
 import net.inferno.socialmedia.model.Post
 import net.inferno.socialmedia.model.User
 import net.inferno.socialmedia.model.UserDetails
 import net.inferno.socialmedia.model.UserImage
+import net.inferno.socialmedia.model.UserNotification
 import net.inferno.socialmedia.model.request.SignupRequest
 import net.inferno.socialmedia.model.response.BaseResponse
 import net.inferno.socialmedia.model.response.LoginResponse
+import net.inferno.socialmedia.model.response.NewsFeedResponse
 import okhttp3.MultipartBody
 import retrofit2.http.Body
 import retrofit2.http.DELETE
@@ -24,6 +28,7 @@ import retrofit2.http.Part
 import retrofit2.http.Path
 import retrofit2.http.Query
 
+@JvmSuppressWildcards
 interface SocialMediaService {
     //region user
     @GET("user/login")
@@ -40,7 +45,11 @@ interface SocialMediaService {
     @GET("get-posts")
     suspend fun getNewsFeed(
         @Query("limit") pageSize: Int,
-    ): BaseResponse<List<Post>>
+    ): BaseResponse<NewsFeedResponse>
+
+    @GET("user/notifications")
+    suspend fun getNotifications(
+    ): BaseResponse<List<UserNotification>>
 
     @GET("user/{userId}")
     suspend fun getUser(
@@ -99,6 +108,12 @@ interface SocialMediaService {
         @Field("postId") postId: String,
     ): BaseResponse<Post>
 
+    @FormUrlEncoded
+    @PATCH("posts/dislike")
+    suspend fun dislikePost(
+        @Field("postId") postId: String,
+    ): BaseResponse<Post>
+
     @DELETE("posts")
     suspend fun deletePost(
         @Query("postId") postId: String,
@@ -135,6 +150,11 @@ interface SocialMediaService {
         @Body body: Map<String, String>,
     ): BaseResponse<Comment>
 
+    @PATCH("comments/dislikes")
+    suspend fun dislikeComment(
+        @Body body: Map<String, String>,
+    ): BaseResponse<Comment>
+
     @POST("comments")
     suspend fun createComment(
         @Body body: Map<String, String?>,
@@ -160,11 +180,136 @@ interface SocialMediaService {
         @Query("communityId") communityId: String,
     ): BaseResponse<List<CommunityPost>>
 
+    @GET("community/unapproved/get-posts")
+    suspend fun getCommunityUnapprovedPosts(
+        @Query("communityId") communityId: String,
+    ): BaseResponse<List<CommunityPost>>
+
+    @POST("community/members/join")
+    suspend fun sendJoinRequest(
+        @Query("communityId") communityId: String,
+    ): BaseResponse<CommunityDetails>
+
+    @DELETE("community/members/join")
+    suspend fun cancelJoinRequest(
+        @Query("communityId") communityId: String,
+        @Query("joinerId") userId: String,
+    ): BaseResponse<CommunityDetails>
+
+    @DELETE("community/members")
+    suspend fun leaveCommunity(
+        @Query("communityId") communityId: String,
+    ): BaseResponse<CommunityDetails>
+
     @Multipart
     @PATCH("community/image")
     suspend fun uploadCommunityCoverImage(
         @Part image: MultipartBody.Part,
         @Part communityId: MultipartBody.Part,
     ): BaseResponse<String>
+
+    @Multipart
+    @POST("community/posts")
+    suspend fun createPost(
+        @Part content: MultipartBody.Part,
+        @Part image: MultipartBody.Part?,
+        @Query("communityId") communityId: String,
+    ): BaseResponse<Post>
+
+    @DELETE("community/posts")
+    suspend fun deletePost(
+        @Query("postId") postId: String,
+        @Query("communityId") communityId: String,
+    ): BaseResponse<Any>
+
+    @FormUrlEncoded
+    @PATCH("community/posts")
+    suspend fun updatePost(
+        @Field("postId") postId: String,
+        @Field("describtion") content: String,
+        @Query("communityId") communityId: String,
+    ): BaseResponse<Post>
+
+    @FormUrlEncoded
+    @PATCH("community/posts/approve")
+    suspend fun approvePost(
+        @Field("postId") postId: String,
+        @Field("communityId") communityId: String,
+    ): BaseResponse<Any>
+
+    @POST("community/members/role/join")
+    suspend fun approveJoinRequest(
+        @Query("communityId") communityId: String,
+        @Query("joinerId") userId: String,
+    ): BaseResponse<Any>
+
+    @DELETE("community/members/role/join")
+    suspend fun denyJoinRequest(
+        @Query("communityId") communityId: String,
+        @Query("joinerId") userId: String,
+    ): BaseResponse<Any>
+
+    @DELETE("community/members/role")
+    suspend fun kickUser(
+        @Query("communityId") communityId: String,
+        @Query("joinerId") userId: String,
+    ): BaseResponse<Any>
+
+    @POST("community/admins")
+    suspend fun promoteUser(
+        @Query("communityId") communityId: String,
+        @Body body: Map<String, Any>,
+    ): BaseResponse<Any>
+
+    @PATCH("community/admins/remove")
+    suspend fun demoteUser(
+        @Query("communityId") communityId: String,
+        @Body body: Map<String, Any>,
+    ): BaseResponse<Any>
+
+    @PATCH("community/manager/publicity")
+    suspend fun convertPublicity(
+        @Query("communityId") communityId: String,
+    ): BaseResponse<Any>
+    //endregion
+
+    //region Messages
+    @GET("messages/conversation")
+    suspend fun getConversations(
+    ): BaseResponse<List<Conversation>>
+
+    @GET("messages/conversation/details")
+    suspend fun getConversation(
+        @Query("conversationId") conversationId: String,
+    ): BaseResponse<Conversation>
+
+    @FormUrlEncoded
+    @POST("messages/conversation")
+    suspend fun startConversation(
+        @Field("userId") userId: String,
+    ): BaseResponse<Conversation>
+
+    @DELETE("messages/conversation")
+    suspend fun hideConversation(
+        @Query("conversationId") conversationId: String,
+    ): BaseResponse<Conversation>
+
+    @GET("messages")
+    suspend fun getMessages(
+        @Query("conversationId") conversationId: String,
+    ): BaseResponse<List<Message>>
+
+    @FormUrlEncoded
+    @POST("messages")
+    suspend fun sendMessage(
+        @Query("conversationId") conversationId: String,
+        @Field("content") messageContent: String,
+    ): BaseResponse<Conversation>
+
+    @DELETE("messages")
+    suspend fun deleteMessage(
+        @Query("conversationId") conversationId: String,
+        @Query("messageId") messageId: String,
+    ): BaseResponse<Conversation>
     //endregion
 }

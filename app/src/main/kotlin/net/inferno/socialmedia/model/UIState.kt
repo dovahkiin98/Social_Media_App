@@ -5,20 +5,11 @@ open class UIState<T> private constructor(
     val error: Exception? = null,
     val data: T? = null,
 ) {
-    fun refresh(): UIState<T> = if (this is Success) {
-        Refreshing(this.data!!)
-    } else {
-        Loading()
-    }
+    val isRefreshing get() = this is Loading && this.data != null
 
-    class Loading<T> : UIState<T>(loading = true)
+    fun loading(): UIState<T> = Loading(this.data)
 
-    class Refreshing<T>(
-        data: T,
-    ) : UIState<T>(
-        loading = true,
-        data = data,
-    )
+    class Loading<T>(data: T? = null) : UIState<T>(data = data, loading = true)
 
     class Success<T>(
         data: T?
@@ -27,13 +18,4 @@ open class UIState<T> private constructor(
     class Failure<T>(
         error: Exception,
     ) : UIState<T>(error = error)
-
-    class RefreshingFailure<T>(
-        data: T,
-        error: Exception,
-    ) : UIState<T>(
-        loading = true,
-        data = data,
-        error = error,
-    )
 }

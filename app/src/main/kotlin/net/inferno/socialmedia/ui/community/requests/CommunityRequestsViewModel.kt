@@ -4,11 +4,10 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 import net.inferno.socialmedia.data.Repository
 import net.inferno.socialmedia.model.CommunityDetails
 import net.inferno.socialmedia.model.UIState
@@ -26,15 +25,18 @@ class CommunityRequestsViewModel @Inject constructor(
     private val _uiState = MutableStateFlow<UIState<CommunityDetails>>(UIState.Loading())
     val uiState get() = _uiState.asStateFlow()
 
+    private val _errorState = MutableStateFlow<Throwable?>(null)
+    val errorState get() = _errorState.asStateFlow()
+
     val currentUser = repository.getSavedUserFlow()
 
     init {
         getCommunityDetails()
     }
 
-    fun getCommunityDetails(isRefreshing: Boolean = false) {
+    fun getCommunityDetails() {
         viewModelScope.launch {
-            _uiState.emit(if (isRefreshing) _uiState.value.refresh() else UIState.Loading())
+            _uiState.emit(_uiState.value.loading())
 
             try {
                 val community = repository.getCommunityDetails(communityId)
@@ -50,11 +52,31 @@ class CommunityRequestsViewModel @Inject constructor(
 
     fun acceptUser(user: User) {
         viewModelScope.launch {
+            try {
+                repository.approveJoinRequest(communityId, user.id)
+                getCommunityDetails()
+            } catch (e: Exception) {
+                _errorState.emit(e)
+
+                delay(200)
+
+                _errorState.emit(null)
+            }
         }
     }
 
     fun denyUser(user: User) {
         viewModelScope.launch {
+            try {
+                repository.denyJoinRequest(communityId, user.id)
+                getCommunityDetails()
+            } catch (e: Exception) {
+                _errorState.emit(e)
+
+                delay(200)
+
+                _errorState.emit(null)
+            }
         }
     }
 }

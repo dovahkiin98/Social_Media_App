@@ -62,9 +62,9 @@ fun UserFollowersUI(
     val coroutineScope = rememberCoroutineScope()
 
     val pullRefreshState = rememberPullRefreshState(
-        refreshing = uiState is UIState.Refreshing,
+        refreshing = uiState.isRefreshing,
         onRefresh = {
-            viewModel.getUserFollowers(true)
+            viewModel.getUserFollowers()
         },
     )
 
@@ -142,7 +142,7 @@ fun UserFollowersUI(
                     modifier = Modifier
                         .fillMaxSize()
                 ) {
-                    items(followers) {
+                    items(followers, key = { it.id }) {
                         UserItem(
                             it,
                             onFollowToggled = if (currentUser.id != it.id) { user ->
@@ -157,7 +157,7 @@ fun UserFollowersUI(
                 }
 
                 PullRefreshIndicator(
-                    uiState is UIState.Refreshing,
+                    uiState.isRefreshing,
                     pullRefreshState,
                     modifier = Modifier
                         .align(Alignment.TopCenter)

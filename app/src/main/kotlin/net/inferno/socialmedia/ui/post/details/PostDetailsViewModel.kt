@@ -43,7 +43,7 @@ class PostDetailsViewModel @Inject constructor(
     }
 
     fun getPostDetails() {
-        _postDataState.value = _postDataState.value.refresh()
+        _postDataState.value = _postDataState.value.loading()
 
         viewModelScope.launch {
             delay(1_000)
@@ -63,7 +63,7 @@ class PostDetailsViewModel @Inject constructor(
     }
 
     fun getPostComments() {
-        _postCommentsState.value = _postCommentsState.value.refresh()
+        _postCommentsState.value = _postCommentsState.value.loading()
 
         viewModelScope.launch {
             delay(1_000)
@@ -85,6 +85,16 @@ class PostDetailsViewModel @Inject constructor(
             val post = _postDataState.value.data!!
 
             val newPost = repository.likePost(post)
+
+            _postDataState.emit(UIState.Success(newPost))
+        }
+    }
+
+    fun dislikePost() {
+        viewModelScope.launch {
+            val post = _postDataState.value.data!!
+
+            val newPost = repository.dislikePost(post)
 
             _postDataState.emit(UIState.Success(newPost))
         }
@@ -117,6 +127,32 @@ class PostDetailsViewModel @Inject constructor(
             val comments = _postCommentsState.value.data!!.toMutableList()
 
             val newComment = repository.likeComment(comment)
+
+            getPostComments()
+
+//            if (newComment.repliedTo != null) {
+//                val originalComment = findOriginalComment(comments, comment)!!
+//                val index = comments.indexOf(originalComment)
+//
+//                val updatedComment = updateReplies(originalComment, newComment)
+//                comments[index] = updatedComment
+//
+//                _postCommentsState.emit(UIState.Success(comments))
+//            } else {
+//                val index = comments.indexOf(comment)
+//
+//                comments[index] = newComment
+//
+//                _postCommentsState.emit(UIState.Success(comments))
+//            }
+        }
+    }
+
+    fun dislikeComment(comment: Comment) {
+        viewModelScope.launch {
+            val comments = _postCommentsState.value.data!!.toMutableList()
+
+            val newComment = repository.dislikeComment(comment)
 
             getPostComments()
 

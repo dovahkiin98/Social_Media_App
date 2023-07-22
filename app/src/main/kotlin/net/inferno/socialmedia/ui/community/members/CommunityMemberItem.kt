@@ -32,7 +32,7 @@ import net.inferno.socialmedia.R
 import net.inferno.socialmedia.model.CommunityDetails
 import net.inferno.socialmedia.model.CommunityMember
 import net.inferno.socialmedia.model.User
-import net.inferno.socialmedia.view.UserImage
+import net.inferno.socialmedia.view.UserAvatar
 import java.time.format.DateTimeFormatter
 
 @OptIn(ExperimentalLayoutApi::class, ExperimentalMaterial3Api::class)
@@ -72,33 +72,18 @@ fun CommunityMemberItem(
                     append("Joined")
                     append(" ")
 
-                    append(member.joinedAt.format(DateTimeFormatter.ofPattern("dd MMM yyyy")))
+                    append(DateTimeFormatter.ofPattern("dd MMM yyyy").format(member.joinedAt))
                 },
             )
         },
         leadingContent = {
-            UserImage(
+            UserAvatar(
+                user = user,
                 onClick = {
                 },
                 modifier = Modifier
                     .size(48.dp)
-            ) {
-                if (user.profileImageUrl != null) {
-                    AsyncImage(
-                        model = ImageRequest.Builder(LocalContext.current)
-                            .data(user.profileImageUrl)
-                            .crossfade(true)
-                            .build(),
-                        contentDescription = null,
-                    )
-                } else {
-                    Box(
-                        modifier = Modifier
-                            .background(Color.Red)
-                            .fillMaxSize()
-                    )
-                }
-            }
+            )
         },
         trailingContent = {
             FlowRow {

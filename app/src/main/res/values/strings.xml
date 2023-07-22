@@ -129,4 +129,27 @@
     <string name="post_deletion_failed">Post Deletion failed : %1$s</string>
     <string name="post_added">Post Added</string>
     <string name="post_updated">Post Updated</string>
+    <string name="creating_post">Creating Post</string>
+    <string name="updating_post">Updating Post</string>
+    <string name="adding_comment">Adding Comment</string>
+    <string name="updating_comment">Updating Comment</string>
+    <string name="delete_community">Delete Community</string>
+    <string name="cancel_request">Cancel Request</string>
+    <string name="notification_channel_posts">Posts</string>
+    <string name="notification_channel_comments">Comments</string>
+    <string name="notification_channel_communities">Communities</string>
+    <string name="notification_channel_users">Users</string>
+    <string name="post_has_bad_comments">This post has too many bad comments</string>
+    <string name="make_public">Make Public</string>
+    <string name="make_private">Make Non-public</string>
+    <string name="approve_post">Approve Post</string>
+    <string name="disapprove_post">Disapprove Post</string>
+    <string name="disapprove_post_message">Are you sure you want to disapprove this post?</string>
+    <string name="pending_posts">Pending Posts</string>
+    <string name="conversations">Conversations</string>
+    <string name="empty_conversations">You have no active conversations</string>
+    <string name="close_conversation">Close Conversation</string>
+    <string name="empty_conversation">This conversation is empty</string>
+    <string name="delete_message">Delete Message</string>
+    <string name="send_message">Send Message</string>
 </resources>

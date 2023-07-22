@@ -62,6 +62,7 @@ import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import coil.compose.AsyncImage
@@ -70,6 +71,7 @@ import kotlinx.coroutines.launch
 import net.inferno.socialmedia.R
 import net.inferno.socialmedia.model.UIState
 import net.inferno.socialmedia.view.ErrorView
+import net.inferno.socialmedia.view.LoadingDialog
 import net.inferno.socialmedia.view.LoadingView
 import java.io.File
 import java.io.FileOutputStream
@@ -98,6 +100,7 @@ fun PostForm(
 
 //    val currentUser by viewModel.currentUser.collectAsState(null)
     val postState by viewModel.postDataState.collectAsState()
+    val communityState by viewModel.communityDateState.collectAsState()
 
     val postAddState by viewModel.postAddState.collectAsState()
     var image by remember { mutableStateOf<File?>(null) }
@@ -166,7 +169,7 @@ fun PostForm(
         if (postAddState is UIState.Success) {
             val previousHandle = navController.previousBackStackEntry?.savedStateHandle
 
-            if(isEditPost) {
+            if (isEditPost) {
                 previousHandle?.set("postResult", PostResult.Updated)
             } else {
                 previousHandle?.set("postResult", PostResult.Added)
@@ -180,14 +183,26 @@ fun PostForm(
         topBar = {
             TopAppBar(
                 title = {
-                    Text(
-                        stringResource(
-                            when {
-                                isEditPost -> R.string.edit_post
-                                else -> R.string.create_post
-                            }
+                    Column {
+                        Text(
+                            stringResource(
+                                when {
+                                    isEditPost -> R.string.edit_post
+                                    else -> R.string.create_post
+                                }
+                            )
                         )
-                    )
+
+                        if (viewModel.communityId != null && communityState.data != null) {
+                            val community = communityState.data!!
+
+                            Text(
+                                community.name,
+                                fontSize = 12.sp,
+                                lineHeight = 14.sp,
+                            )
+                        }
+                    }
                 },
                 navigationIcon = {
                     PlainTooltipBox({
@@ -196,9 +211,7 @@ fun PostForm(
                         IconButton(
                             onClick = {
                                 onBackPressed()
-                            },
-                            modifier = Modifier
-                                .tooltipTrigger()
+                            }, modifier = Modifier.tooltipTrigger()
                         ) {
                             Icon(
                                 Icons.Default.Close,
@@ -278,9 +291,7 @@ fun PostForm(
             )
         } else if (postState.error != null) {
             ErrorView(
-                error = postState.error!!,
-                modifier = Modifier
-                    .padding(paddingValues)
+                error = postState.error!!, modifier = Modifier.padding(paddingValues)
             ) {
                 viewModel.getData()
             }
@@ -308,27 +319,36 @@ fun PostForm(
                 )
             },
             confirmButton = {
-                TextButton(
-                    onClick = {
-                        showExitDialog = false
-                        navController.popBackStack()
-                    }
-                ) {
+                TextButton(onClick = {
+                    showExitDialog = false
+                    navController.popBackStack()
+                }) {
                     Text(
                         stringResource(id = R.string.discard)
                     )
                 }
             },
             dismissButton = {
-                TextButton(
-                    onClick = {
-                        showExitDialog = false
-                    }
-                ) {
+                TextButton(onClick = {
+                    showExitDialog = false
+                }) {
                     Text(
                         stringResource(id = R.string.no)
                     )
                 }
+            },
+        )
+    }
+
+    if (postAddState is UIState.Loading) {
+        LoadingDialog(
+            text = {
+                Text(
+                    stringResource(
+                        if (!isEditPost) R.string.creating_post
+                        else R.string.updating_post
+                    ) + "...",
+                )
             },
         )
     }
@@ -341,7 +361,6 @@ fun PostInputForm(
     image: File? = null,
 ) {
     var textFieldValue by remember { textFieldState }
-    println(image)
 
     Column(
         modifier = modifier,
@@ -371,14 +390,11 @@ fun PostInputForm(
 
         Box {
             AsyncImage(
-                model = ImageRequest.Builder(LocalContext.current)
-                    .data(image)
-                    .crossfade(true)
+                model = ImageRequest.Builder(LocalContext.current).data(image).crossfade(true)
                     .build(),
                 contentDescription = null,
                 contentScale = ContentScale.FillWidth,
-                modifier = Modifier
-                    .fillMaxWidth()
+                modifier = Modifier.fillMaxWidth()
             )
         }
     }
@@ -392,9 +408,9 @@ fun PaddingValues.withIme(): PaddingValues {
     return PaddingValues(
         top = calculateTopPadding(),
         start = calculateStartPadding(layoutDirection),
-        bottom = if (WindowInsets.isImeVisible) WindowInsets.ime
-            .asPaddingValues()
-            .calculateBottomPadding()
+        bottom =
+        if (WindowInsets.isImeVisible)
+            WindowInsets.ime.asPaddingValues().calculateBottomPadding()
         else calculateBottomPadding(),
         end = calculateEndPadding(layoutDirection),
     )

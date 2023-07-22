@@ -15,7 +15,6 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.calculateEndPadding
 import androidx.compose.foundation.layout.calculateStartPadding
@@ -31,18 +30,20 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.pullrefresh.PullRefreshIndicator
 import androidx.compose.material.pullrefresh.pullRefresh
 import androidx.compose.material.pullrefresh.rememberPullRefreshState
 import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ElevatedButton
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
@@ -77,6 +78,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -92,15 +94,16 @@ import net.inferno.socialmedia.model.Post
 import net.inferno.socialmedia.model.UIState
 import net.inferno.socialmedia.ui.cropImage.CropImageActivity
 import net.inferno.socialmedia.ui.main.Routes
+import net.inferno.socialmedia.ui.post.PostAction
+import net.inferno.socialmedia.ui.post.PostItem
 import net.inferno.socialmedia.ui.post.form.PostResult
 import net.inferno.socialmedia.utils.CropImageContract
 import net.inferno.socialmedia.utils.getFilePathFromUri
 import net.inferno.socialmedia.view.BackIconButton
 import net.inferno.socialmedia.view.CustomModalBottomSheet
 import net.inferno.socialmedia.view.ErrorView
+import net.inferno.socialmedia.view.LoadingDialog
 import net.inferno.socialmedia.view.LoadingView
-import net.inferno.socialmedia.view.PostAction
-import net.inferno.socialmedia.view.PostItem
 import java.io.File
 import java.time.format.DateTimeFormatter
 
@@ -156,7 +159,7 @@ fun CommunityUI(
     val coroutineScope = rememberCoroutineScope()
     val lazyListState = rememberLazyListState()
 
-    val currentUser by viewModel.currentUser.collectAsState(null)
+    val currentUserState by viewModel.currentUser.collectAsState(null)
     val communityState by viewModel.communityData.collectAsState()
     val postsState by viewModel.communityPostsState.collectAsState()
     val coverImageUpload by viewModel.coverImageUploadState.collectAsState()
@@ -178,6 +181,7 @@ fun CommunityUI(
             coverImageUpload is UIState.Loading
         }
     }
+    var showMenu by remember { mutableStateOf(false) }
 
     var isRefreshing by remember { mutableStateOf(false) }
     val pullRefreshState = rememberPullRefreshState(
@@ -239,7 +243,6 @@ fun CommunityUI(
     }
 
     val onBackPressed = {
-        println(lazyListState.layoutInfo)
         if (lazyListState.firstVisibleItemIndex == 0 && lazyListState.firstVisibleItemScrollOffset == 0) {
             navController.popBackStack()
         } else {
@@ -296,6 +299,8 @@ fun CommunityUI(
         }
     }
 
+    val currentUser = currentUserState ?: return
+
     Scaffold(
         topBar = {
             TopAppBar(
@@ -310,14 +315,51 @@ fun CommunityUI(
                     }
                 },
                 scrollBehavior = topAppBarScrollBehavior,
+                actions = {
+                    if (communityState.data != null) {
+                        val community = communityState.data!!
+
+                        if (currentUser.isManager(community)) {
+                            IconButton(
+                                onClick = {
+                                    showMenu = !showMenu
+                                },
+                            ) {
+                                Icon(
+                                    Icons.Default.MoreVert,
+                                    null,
+                                )
+                            }
+
+                            DropdownMenu(
+                                expanded = showMenu,
+                                onDismissRequest = { showMenu = false },
+                                offset = DpOffset(x = 0.dp, y = (-48).dp),
+                            ) {
+                                DropdownMenuItem(
+                                    onClick = {
+                                        viewModel.convertPublicity()
+                                        showMenu = false
+                                    },
+                                    text = {
+                                        Text(
+                                            if (community.isPublic) stringResource(id = R.string.make_private)
+                                            else stringResource(id = R.string.make_public)
+                                        )
+                                    }
+                                )
+                            }
+                        }
+                    }
+                }
             )
         },
         snackbarHost = {
             SnackbarHost(snackbarHostState)
         },
         floatingActionButton = {
-            if (communityState.data != null && currentUser != null) {
-                if (communityState.data!!.isMember(currentUser!!)) {
+            if (communityState.data != null) {
+                if (communityState.data!!.isMember(currentUser)) {
                     ExtendedFloatingActionButton(
                         text = {
                             Text(stringResource(id = R.string.new_post))
@@ -326,7 +368,7 @@ fun CommunityUI(
                             Icon(Icons.Default.Edit, null)
                         },
                         onClick = {
-                            navController.navigate(Routes.addPost(null))
+                            navController.navigate(Routes.addPost(null, communityState.data!!.id))
                         },
                     )
                 }
@@ -335,7 +377,7 @@ fun CommunityUI(
         modifier = Modifier
             .nestedScroll(topAppBarScrollBehavior.nestedScrollConnection)
     ) { paddingValues ->
-        if (communityState.data != null && currentUser != null) {
+        if (communityState.data != null) {
             val community = communityState.data!!
 
             Box(
@@ -362,9 +404,11 @@ fun CommunityUI(
                                         .fillMaxWidth()
                                         .height(imageHeight)
                                         .clickable {
-                                            showCoverImageSheet = true
-                                            coroutineScope.launch {
-                                                coverImageSheetState.show()
+                                            if (
+                                                community.coverImageUrl != null ||
+                                                community.isManager(currentUser)
+                                            ) {
+                                                showCoverImageSheet = true
                                             }
                                         }
                                 ) {
@@ -400,11 +444,8 @@ fun CommunityUI(
                                     append(stringResource(id = R.string.created))
                                     append(" ")
                                     append(
-                                        community.createdAt.format(
-                                            DateTimeFormatter.ofPattern(
-                                                "dd MMM yyyy"
-                                            )
-                                        )
+                                        DateTimeFormatter.ofPattern("dd MMM yyyy")
+                                            .format(community.createdAt)
                                     )
                                 },
                                 color = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -440,8 +481,8 @@ fun CommunityUI(
                                         .clip(RoundedCornerShape(8.dp))
                                         .then(
                                             if (
-                                                community.isAdmin(currentUser!!) ||
-                                                community.isManager(currentUser!!)
+                                                community.isAdmin(currentUser) ||
+                                                community.isManager(currentUser)
                                             ) Modifier.clickable {
                                                 navController.navigate(
                                                     Routes.communityMembers(
@@ -454,8 +495,9 @@ fun CommunityUI(
                                 )
 
                                 if (
-                                    community.isAdmin(currentUser!!) ||
-                                    community.isManager(currentUser!!)
+                                    community.pendingMembers.isNotEmpty() &&
+                                    (community.isAdmin(currentUser) ||
+                                            community.isManager(currentUser))
                                 ) {
                                     Spacer(Modifier.width(8.dp))
 
@@ -488,7 +530,7 @@ fun CommunityUI(
                                     )
                                 }
 
-                                if (community.isManager(currentUser!!)) {
+                                if (community.isManager(currentUser)) {
                                     Spacer(Modifier.width(8.dp))
 
                                     Text(
@@ -514,11 +556,24 @@ fun CommunityUI(
                                 }
                             }
 
-                            if (community.isMember(currentUser!!)) {
+                            if (community.isManager(currentUser)) {
                                 OutlinedButton(
                                     onClick = {
-//                                        viewModel.toggleFollow(userData)
-//                                        followingState = !followingState
+
+                                    },
+                                    contentPadding = PaddingValues(
+                                        horizontal = 12.dp,
+                                    ),
+                                    modifier = Modifier
+                                        .padding(8.dp)
+                                        .fillMaxWidth()
+                                ) {
+                                    Text(stringResource(id = R.string.delete_community))
+                                }
+                            } else if (community.isMember(currentUser)) {
+                                OutlinedButton(
+                                    onClick = {
+                                        viewModel.leaveCommunity()
                                     },
                                     contentPadding = PaddingValues(
                                         horizontal = 12.dp,
@@ -529,11 +584,24 @@ fun CommunityUI(
                                 ) {
                                     Text(stringResource(id = R.string.leave))
                                 }
+                            } else if (community.isPending(currentUser)) {
+                                OutlinedButton(
+                                    onClick = {
+                                        viewModel.cancelJoinRequest()
+                                    },
+                                    contentPadding = PaddingValues(
+                                        horizontal = 12.dp,
+                                    ),
+                                    modifier = Modifier
+                                        .padding(8.dp)
+                                        .fillMaxWidth()
+                                ) {
+                                    Text(stringResource(id = R.string.cancel_request))
+                                }
                             } else {
                                 ElevatedButton(
                                     onClick = {
-//                                        viewModel.toggleFollow(userData)
-//                                        followingState = !followingState
+                                        viewModel.sendJoinRequest()
                                     },
                                     contentPadding = PaddingValues(
                                         horizontal = 12.dp,
@@ -545,21 +613,47 @@ fun CommunityUI(
                                     Text(stringResource(id = R.string.request_join))
                                 }
                             }
+
+                            if (community.hasPendingPosts &&
+                                (community.isManager(currentUser) || community.isAdmin(currentUser))
+                            ) {
+                                ElevatedButton(
+                                    onClick = {
+                                        navController.navigate(Routes.pendingPosts(community))
+                                    },
+                                    contentPadding = PaddingValues(
+                                        horizontal = 12.dp,
+                                    ),
+                                    modifier = Modifier
+                                        .padding(8.dp)
+                                        .fillMaxWidth()
+                                ) {
+                                    Text(stringResource(id = R.string.pending_posts))
+                                }
+                            }
                         }
                     }
 
                     if (postsState.data != null) {
-                        items(postsState.data!!) {
+                        items(postsState.data!!, key = { it.id }) {
                             PostItem(
-                                currentUserId = currentUser!!.id,
+                                currentUserId = currentUser.id,
+                                communityId = community.id,
                                 post = it.post,
                                 onImageClick = { image ->
                                     navController.navigate(Routes.image(image.imageUrl!!))
                                 },
                                 onLiked = { post ->
-//                                    viewModel.likePost(post)
+                                    viewModel.likePost(post)
                                 },
-                                onOptionsClick = { post, action ->
+                                onDisliked = { post ->
+                                    viewModel.dislikePost(post)
+                                },
+                                onOptionsClick = if (
+                                    currentUser.isAdmin(community) ||
+                                    currentUser.isManager(community) ||
+                                    currentUser.id == it.post.publisher.id
+                                ) { post, action ->
                                     selectedPost = post
 
                                     when (action) {
@@ -568,15 +662,22 @@ fun CommunityUI(
                                         }
 
                                         PostAction.Edit -> {
-                                            navController.navigate(Routes.addPost(post))
+                                            navController.navigate(
+                                                Routes.addPost(
+                                                    post,
+                                                    community.id,
+                                                )
+                                            )
                                         }
+
+                                        else -> {}
                                     }
-                                },
+                                } else null,
                                 onClick = { post ->
                                     navController.navigate(Routes.post(post))
                                 },
                                 onUserClick = { user ->
-                                    navController.navigate(Routes.profile(if (currentUser!!.id == user.id) null else user))
+                                    navController.navigate(Routes.profile(if (currentUser.id == user.id) null else user))
                                 },
                                 modifier = Modifier
                                     .padding(vertical = 8.dp)
@@ -638,27 +739,29 @@ fun CommunityUI(
             },
             sheetState = coverImageSheetState,
         ) {
-            ListItem(
-                leadingContent = {
-                    Icon(
-                        painterResource(id = R.drawable.ic_image),
-                        contentDescription = null,
-                    )
-                },
-                headlineContent = {
-                    Text(stringResource(id = R.string.view_community_cover))
-                },
-                modifier = Modifier
-                    .clickable {
-                        coroutineScope.launch {
-                            coverImageSheetState.hide()
-                            showCoverImageSheet = false
-                        }
+            if (communityState.data!!.coverImageUrl != null) {
+                ListItem(
+                    leadingContent = {
+                        Icon(
+                            painterResource(id = R.drawable.ic_image),
+                            contentDescription = null,
+                        )
+                    },
+                    headlineContent = {
+                        Text(stringResource(id = R.string.view_community_cover))
+                    },
+                    modifier = Modifier
+                        .clickable {
+                            coroutineScope.launch {
+                                coverImageSheetState.hide()
+                                showCoverImageSheet = false
+                            }
 
-                        navController.navigate(Routes.image(communityState.data!!.coverImageUrl!!))
-                    }
-            )
-            if (currentUser!!.isManager(communityState.data!!)) {
+                            navController.navigate(Routes.image(communityState.data!!.coverImageUrl!!))
+                        }
+                )
+            }
+            if (communityState.data!!.isManager(currentUser)) {
                 ListItem(
                     leadingContent = {
                         Icon(
@@ -686,18 +789,13 @@ fun CommunityUI(
     }
 
     if (showUploadingDialog) {
-        AlertDialog(onDismissRequest = {}) {
-            Row {
-                CircularProgressIndicator()
-
-                Spacer(Modifier.width(24.dp))
-
+        LoadingDialog(
+            text = {
                 Text(
                     stringResource(id = R.string.uploading_image) + "...",
-                    modifier = Modifier.weight(1f),
                 )
-            }
-        }
+            },
+        )
     }
 
     if (showPostDeletionDialog) {

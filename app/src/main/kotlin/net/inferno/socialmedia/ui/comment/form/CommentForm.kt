@@ -50,6 +50,7 @@ import net.inferno.socialmedia.R
 import net.inferno.socialmedia.model.UIState
 import net.inferno.socialmedia.utils.parseAsHtml
 import net.inferno.socialmedia.view.ErrorView
+import net.inferno.socialmedia.view.LoadingDialog
 import net.inferno.socialmedia.view.LoadingView
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalComposeUiApi::class)
@@ -111,7 +112,7 @@ fun CommentForm(
         if (commentAddState is UIState.Success) {
             val previousHandle = navController.previousBackStackEntry?.savedStateHandle
 
-            if(isEditComment) {
+            if (isEditComment) {
                 previousHandle?.set("commentResult", CommentResult.Updated)
             } else {
                 previousHandle?.set("commentResult", CommentResult.Added)
@@ -307,6 +308,19 @@ fun CommentForm(
                         stringResource(id = R.string.no)
                     )
                 }
+            },
+        )
+    }
+
+    if (commentAddState is UIState.Loading) {
+        LoadingDialog(
+            text = {
+                Text(
+                    stringResource(
+                        if (!isEditComment) R.string.adding_comment
+                        else R.string.updating_comment
+                    ) + "...",
+                )
             },
         )
     }

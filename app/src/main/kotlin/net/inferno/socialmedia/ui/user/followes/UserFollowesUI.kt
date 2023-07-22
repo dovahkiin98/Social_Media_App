@@ -39,11 +39,11 @@ import net.inferno.socialmedia.model.User
 import net.inferno.socialmedia.model.UserDetails
 import net.inferno.socialmedia.theme.SocialMediaTheme
 import net.inferno.socialmedia.ui.main.Routes
+import net.inferno.socialmedia.ui.user.UserItem
 import net.inferno.socialmedia.utils.CustomPreview
 import net.inferno.socialmedia.view.BackIconButton
 import net.inferno.socialmedia.view.ErrorView
 import net.inferno.socialmedia.view.LoadingView
-import net.inferno.socialmedia.ui.user.UserItem
 import java.util.UUID
 
 @OptIn(ExperimentalMaterialApi::class)
@@ -62,9 +62,9 @@ fun UserFollowesUI(
     val coroutineScope = rememberCoroutineScope()
 
     val pullRefreshState = rememberPullRefreshState(
-        refreshing = uiState is UIState.Refreshing,
+        refreshing = uiState.isRefreshing,
         onRefresh = {
-            viewModel.getUserFollowings(true)
+            viewModel.getUserFollowings()
         },
     )
 
@@ -143,7 +143,7 @@ fun UserFollowesUI(
                     modifier = Modifier
                         .fillMaxSize()
                 ) {
-                    items(followers) {
+                    items(followers, key = { it.id }) {
                         UserItem(
                             it,
                             onFollowToggled = if (currentUser.id != it.id) { user ->
@@ -152,13 +152,13 @@ fun UserFollowesUI(
                             onClick = if (currentUser.id != it.id) { user ->
                                 onItemUserClick(user)
                             } else null,
-                            following = currentUser.followers.contains(it.id),
+                            following = currentUser.followes.contains(it.id),
                         )
                     }
                 }
 
                 PullRefreshIndicator(
-                    uiState is UIState.Refreshing,
+                    uiState.isRefreshing,
                     pullRefreshState,
                     modifier = Modifier
                         .align(Alignment.TopCenter)

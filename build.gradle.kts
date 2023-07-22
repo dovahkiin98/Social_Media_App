@@ -1,10 +1,8 @@
+// Top-level build file where you can add configuration options common to all sub-projects/modules.
+@Suppress("DSL_SCOPE_VIOLATION") // TODO: Remove once KTIJ-19369 is fixed
 plugins {
-    id("com.android.application") version libs.versions.gradle apply false
-    id ("com.android.library") version libs.versions.gradle apply false
-    id ("org.jetbrains.kotlin.android") version libs.versions.kotlin apply false
-    id("com.google.dagger.hilt.android") version libs.versions.hilt apply false
+    alias(libs.plugins.android.tools.build.gradle) apply false
+    alias(libs.plugins.kotlin.gradle) apply false
+    alias(libs.plugins.hilt.android.gradle) version libs.versions.hilt apply false
 }
-
-tasks.register<Delete>("clean") {
-    delete(rootProject.buildDir)
-}
+true // Needed to make the Suppress annotation work for the plugins block

@@ -7,13 +7,14 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.last
 import kotlinx.coroutines.launch
 import net.inferno.socialmedia.data.Repository
 import net.inferno.socialmedia.model.CommunityDetails
 import net.inferno.socialmedia.model.CommunityPost
 import net.inferno.socialmedia.model.Post
 import net.inferno.socialmedia.model.UIState
-import net.inferno.socialmedia.model.User
 import retrofit2.HttpException
 import java.io.File
 import javax.inject.Inject
@@ -45,7 +46,7 @@ class CommunityViewModel @Inject constructor(
     }
 
     fun getCommunityDetails() {
-        _communityDataState.value = _communityDataState.value.refresh()
+        _communityDataState.value = _communityDataState.value.loading()
 
         viewModelScope.launch {
             delay(1_000)
@@ -65,7 +66,7 @@ class CommunityViewModel @Inject constructor(
     }
 
     fun getCommunityPosts() {
-        _communityPostsState.value = _communityPostsState.value.refresh()
+        _communityPostsState.value = _communityPostsState.value.loading()
 
         viewModelScope.launch {
             delay(1_000)
@@ -82,9 +83,39 @@ class CommunityViewModel @Inject constructor(
         }
     }
 
-    fun toggleFollow(user: User) {
+    fun sendJoinRequest() {
         viewModelScope.launch {
-            repository.toggleFollow(user)
+            try {
+                val community = repository.sendJoinRequest(communityId)
+
+                _communityDataState.emit(UIState.Success(community))
+            } catch (e: Exception) {
+
+            }
+        }
+    }
+
+    fun cancelJoinRequest() {
+        viewModelScope.launch {
+            try {
+                val community = repository.cancelJoinRequest(communityId)
+
+                _communityDataState.emit(UIState.Success(community))
+            } catch (e: Exception) {
+                println(e)
+            }
+        }
+    }
+
+    fun leaveCommunity() {
+        viewModelScope.launch {
+            try {
+                val community = repository.leaveCommunity(communityId)
+
+                _communityDataState.emit(UIState.Success(community))
+            } catch (e: Exception) {
+
+            }
         }
     }
 
@@ -111,14 +142,39 @@ class CommunityViewModel @Inject constructor(
         }
     }
 
-    fun likePost(post: CommunityPost) {
+    fun likePost(post: Post) {
         viewModelScope.launch {
             val posts = _communityPostsState.value.data!!.toMutableList()
-            val index = posts.indexOf(post)
+            val index = posts.indexOfFirst { it.post.id == post.id }
+            val communityPost = posts[index]
 
-            val newPost = repository.likePost(post.post)
+            val newPost = repository.likePost(post)
+            val newCommunityPost = CommunityPost(
+                id = communityPost.id,
+                approved = communityPost.approved,
+                post = newPost,
+            )
 
-//            posts[index] = newPost
+            posts[index] = newCommunityPost
+
+            _communityPostsState.emit(UIState.Success(posts))
+        }
+    }
+
+    fun dislikePost(post: Post) {
+        viewModelScope.launch {
+            val posts = _communityPostsState.value.data!!.toMutableList()
+            val index = posts.indexOfFirst { it.post.id == post.id }
+            val communityPost = posts[index]
+
+            val newPost = repository.dislikePost(post)
+            val newCommunityPost = CommunityPost(
+                id = communityPost.id,
+                approved = communityPost.approved,
+                post = newPost,
+            )
+
+            posts[index] = newCommunityPost
 
             _communityPostsState.emit(UIState.Success(posts))
         }
@@ -128,13 +184,18 @@ class CommunityViewModel @Inject constructor(
         _postDeletionState.value = UIState.Loading()
 
         viewModelScope.launch {
+            val currentUser = currentUser.first()!!
             val posts = _communityPostsState.value.data!!.toMutableList()
-//            val index = posts.indexOf(post)
+            val index = posts.indexOfFirst { it.post.id == post.id }
 
             try {
-                repository.deletePost(post)
+                if(currentUser.id != post.id) {
+                    repository.deletePost(post, communityId)
+                } else {
+                    repository.deletePost(post)
+                }
 
-//                posts.removeAt(index)
+                posts.removeAt(index)
 
                 _communityPostsState.emit(UIState.Success(posts))
                 _postDeletionState.emit(UIState.Success(null))
@@ -147,6 +208,17 @@ class CommunityViewModel @Inject constructor(
             delay(200)
 
             _postDeletionState.emit(null)
+        }
+    }
+
+    fun convertPublicity() {
+        viewModelScope.launch {
+            try {
+                repository.convertPublicity(communityId)
+                getCommunityDetails()
+            } catch (e: Exception) {
+                println(e)
+            }
         }
     }
 }

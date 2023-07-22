@@ -10,6 +10,7 @@ import net.inferno.socialmedia.R
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import java.time.temporal.ChronoUnit
+import java.time.temporal.Temporal
 
 @Retention(AnnotationRetention.RUNTIME)
 @JsonQualifier
@@ -33,7 +34,7 @@ class LocalDateAsStringAdapter {
 }
 
 @Composable
-fun LocalDateTime.toReadableText(): String {
+fun Temporal.toReadableText(): String {
     val today = LocalDateTime.now()
 
     val years = ChronoUnit.YEARS.between(this, today)

@@ -10,6 +10,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 import net.inferno.socialmedia.data.Repository
+import net.inferno.socialmedia.model.Conversation
 import net.inferno.socialmedia.model.Post
 import net.inferno.socialmedia.model.UIState
 import net.inferno.socialmedia.model.User
@@ -44,6 +45,9 @@ class UserProfileViewModel @Inject constructor(
     private val _postDeletionState = MutableStateFlow<UIState<Unit>?>(null)
     val postDeletionState = _postDeletionState.asStateFlow()
 
+    private val _startConversationState = MutableStateFlow<UIState<String>?>(null)
+    val startConversationState = _startConversationState.asStateFlow()
+
     init {
         if (userId == null) viewModelScope.launch {
             repository.getSavedUserFlow().collectLatest {
@@ -55,11 +59,9 @@ class UserProfileViewModel @Inject constructor(
     }
 
     fun getUserDetails() {
-        _userDataState.value = _userDataState.value.refresh()
+        _userDataState.value = _userDataState.value.loading()
 
         viewModelScope.launch {
-            delay(1_000)
-
             try {
                 val user = repository.getUserDetails(userId)
 
@@ -75,11 +77,9 @@ class UserProfileViewModel @Inject constructor(
     }
 
     fun getUserPosts() {
-        _userPostsState.value = _userPostsState.value.refresh()
+        _userPostsState.value = _userPostsState.value.loading()
 
         viewModelScope.launch {
-            delay(1_000)
-
             try {
                 val posts = repository.getUserPosts(userId)
 
@@ -155,6 +155,19 @@ class UserProfileViewModel @Inject constructor(
         }
     }
 
+    fun dislikePost(post: Post) {
+        viewModelScope.launch {
+            val posts = _userPostsState.value.data!!.toMutableList()
+            val index = posts.indexOf(post)
+
+            val newPost = repository.dislikePost(post)
+
+            posts[index] = newPost
+
+            _userPostsState.emit(UIState.Success(posts))
+        }
+    }
+
     fun deletePost(post: Post) {
         _postDeletionState.value = UIState.Loading()
 
@@ -178,6 +191,26 @@ class UserProfileViewModel @Inject constructor(
             delay(200)
 
             _postDeletionState.emit(null)
+        }
+    }
+
+    fun startConversation() {
+        _startConversationState.value = UIState.Loading()
+
+        viewModelScope.launch {
+            try {
+                val newConversation = repository.startConversation(userId!!)
+
+                _startConversationState.emit(UIState.Success(newConversation.id))
+            } catch (e: HttpException) {
+                _startConversationState.emit(UIState.Failure(Exception(e.message())))
+            } catch (e: Exception) {
+                _startConversationState.emit(UIState.Failure(e))
+            }
+
+            delay(200)
+
+            _startConversationState.emit(null)
         }
     }
 }

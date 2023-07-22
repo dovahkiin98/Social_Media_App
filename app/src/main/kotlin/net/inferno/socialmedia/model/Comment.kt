@@ -22,6 +22,12 @@ data class Comment(
     @Json(name = "likedBy")
     val likes: List<String> = listOf(),
 
+    @Json(name = "dislikedBy")
+    val dislikes: List<String> = listOf(),
+
+    @Json(name = "badComment")
+    val isBadComment: Boolean = false,
+
     @Json(name = "repliedBy")
     val replies: List<Comment> = listOf(),
 

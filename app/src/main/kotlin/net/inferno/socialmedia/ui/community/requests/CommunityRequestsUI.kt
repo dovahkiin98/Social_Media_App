@@ -22,6 +22,7 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.rememberTopAppBarState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
@@ -34,6 +35,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
+import kotlinx.coroutines.launch
 import net.inferno.socialmedia.R
 import net.inferno.socialmedia.model.CommunityDetails
 import net.inferno.socialmedia.model.DummyCommunity
@@ -58,16 +60,27 @@ fun CommunityRequestsUI(
     val snackbarHostState = remember { SnackbarHostState() }
 
     val uiState by viewModel.uiState.collectAsState()
+    val errorState by viewModel.errorState.collectAsState()
     val currentUser by viewModel.currentUser.collectAsState(null)
 
     val coroutineScope = rememberCoroutineScope()
 
     val pullRefreshState = rememberPullRefreshState(
-        refreshing = uiState is UIState.Refreshing,
+        refreshing = uiState.isRefreshing,
         onRefresh = {
-            viewModel.getCommunityDetails(true)
+            viewModel.getCommunityDetails()
         },
     )
+
+    LaunchedEffect(errorState) {
+        if (errorState != null) {
+            val error = errorState!!
+
+            coroutineScope.launch {
+                snackbarHostState.showSnackbar(error.message ?: error.toString())
+            }
+        }
+    }
 
     CommunityRequestsUI(
         uiState = uiState,
@@ -82,7 +95,13 @@ fun CommunityRequestsUI(
             viewModel.getCommunityDetails()
         },
         onAcceptUser = {
-            viewModel.acceptUser(it)
+            try {
+                viewModel.acceptUser(it)
+            } catch (e: Exception) {
+                coroutineScope.launch {
+                    snackbarHostState.showSnackbar(e.toString())
+                }
+            }
         },
         onDenyUser = {
             viewModel.denyUser(it)
@@ -124,6 +143,7 @@ fun CommunityRequestsUI(
                             Text(
                                 uiState.data.name,
                                 fontSize = 12.sp,
+                                lineHeight = 14.sp,
                             )
                         }
                     }
@@ -156,7 +176,7 @@ fun CommunityRequestsUI(
                     modifier = Modifier
                         .fillMaxSize()
                 ) {
-                    items(community.pendingMembers) {
+                    items(community.pendingMembers, key = { it.id }) {
                         CommunityRequestItem(
                             it,
                             onAccept = onAcceptUser,
@@ -167,7 +187,7 @@ fun CommunityRequestsUI(
                 }
 
                 PullRefreshIndicator(
-                    uiState is UIState.Refreshing,
+                    uiState.isRefreshing,
                     pullRefreshState,
                     modifier = Modifier
                         .align(Alignment.TopCenter)

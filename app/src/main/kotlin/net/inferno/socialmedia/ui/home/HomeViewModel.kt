@@ -1,14 +1,23 @@
 package net.inferno.socialmedia.ui.home
 
+import android.app.Application
+import androidx.core.content.pm.ShortcutManagerCompat
+import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.google.firebase.firestore.ktx.snapshots
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.tasks.asDeferred
+import kotlinx.coroutines.tasks.await
+import kotlinx.coroutines.withContext
 import net.inferno.socialmedia.data.Repository
 import net.inferno.socialmedia.model.Post
 import net.inferno.socialmedia.model.UIState
@@ -20,7 +29,8 @@ import javax.inject.Inject
 class HomeViewModel @Inject constructor(
     private val repository: Repository,
     private val savedStateHandle: SavedStateHandle,
-) : ViewModel() {
+    application: Application,
+) : AndroidViewModel(application) {
 
     private val _userDataState = MutableStateFlow<UIState<UserDetails>>(UIState.Loading())
     val userDataState get() = _userDataState.asStateFlow()
@@ -105,6 +115,8 @@ class HomeViewModel @Inject constructor(
 
     fun logout() {
         viewModelScope.launch {
+            ShortcutManagerCompat.removeAllDynamicShortcuts(getApplication())
+
             repository.logout()
         }
     }

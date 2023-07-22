@@ -4,10 +4,10 @@ import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 
 plugins {
-    id("com.android.application")
+    alias(libs.plugins.android.tools.build.gradle)
     kotlin("android")
     kotlin("kapt")
-    id("dagger.hilt.android.plugin")
+    alias(libs.plugins.hilt.android.gradle)
     kotlin("plugin.serialization") version libs.versions.kotlin
 }
 
@@ -23,16 +23,16 @@ android {
         }
     }
 
-    buildToolsVersion = "34.0.0-rc04"
-    compileSdk = 33
-    compileSdkExtension = 4
+    buildToolsVersion = "34.0.0"
+    compileSdk = 34
+//    compileSdkExtension = 4
 
     defaultConfig {
         applicationId = "net.inferno.socialmedia"
 
         compileSdkPreview = "UpsideDownCake"
         minSdk = 24
-        targetSdk = 33
+        targetSdk = 34
 
         versionCode = 1
         versionName = "1.0"
@@ -120,7 +120,7 @@ android {
     }
 
     composeOptions {
-        kotlinCompilerExtensionVersion = "1.4.7"
+        kotlinCompilerExtensionVersion = "1.4.8"
     }
 }
 
@@ -150,6 +150,9 @@ dependencies {
 
     //region Google
     implementation(libs.google.material)
+    implementation(platform("com.google.firebase:firebase-bom:32.2.0"))
+
+    implementation("com.google.firebase:firebase-firestore-ktx")
     //endregion
 
     //region Networking
@@ -173,7 +176,9 @@ dependencies {
     implementation(libs.bundles.compose)
 
     implementation(libs.androidx.navigation.compose)
+    implementation(libs.androidx.lifecycle.runtime.compose)
     implementation(libs.androidx.lifecycle.viewmodel.compose)
+//    implementation(libs.androidx.lifecycle.service)
 
     implementation(libs.androidx.compose.material3)
     //endregion

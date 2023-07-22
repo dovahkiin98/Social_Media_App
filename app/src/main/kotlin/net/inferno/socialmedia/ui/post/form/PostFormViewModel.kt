@@ -4,13 +4,12 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 import net.inferno.socialmedia.data.Repository
+import net.inferno.socialmedia.model.Community
 import net.inferno.socialmedia.model.Post
 import net.inferno.socialmedia.model.UIState
 import retrofit2.HttpException
@@ -23,9 +22,13 @@ class PostFormViewModel @Inject constructor(
     private val savedStateHandle: SavedStateHandle,
 ) : ViewModel() {
     val postId = savedStateHandle.get<String>("postId")
+    val communityId = savedStateHandle.get<String>("communityId")
 
     private val _postDataState = MutableStateFlow<UIState<Post>>(UIState.Loading())
     val postDataState = _postDataState.asStateFlow()
+
+    private val _communityDataState = MutableStateFlow<UIState<Community>>(UIState.Loading())
+    val communityDateState = _communityDataState.asStateFlow()
 
     private val _postAddState = MutableStateFlow<UIState<Unit>?>(null)
     val postAddState = _postAddState.asStateFlow()
@@ -39,6 +42,10 @@ class PostFormViewModel @Inject constructor(
     fun getData() {
         if (postId != null) {
             getPostDetails()
+        }
+
+        if(communityId != null) {
+            getCommunityData()
         }
     }
 
@@ -58,6 +65,22 @@ class PostFormViewModel @Inject constructor(
         }
     }
 
+    private fun getCommunityData() {
+        _communityDataState.value = UIState.Loading()
+
+        viewModelScope.launch {
+            try {
+                val community = repository.getCommunityDetails(communityId!!)
+
+                _communityDataState.emit(UIState.Success(community))
+            } catch (e: HttpException) {
+                _communityDataState.emit(UIState.Failure(Exception(e.message())))
+            } catch (e: Exception) {
+                _communityDataState.emit(UIState.Failure(e))
+            }
+        }
+    }
+
     fun createPost(
         content: String,
         image: File?,
@@ -66,7 +89,7 @@ class PostFormViewModel @Inject constructor(
 
         viewModelScope.launch {
             try {
-                val post = repository.createPost(content, image)
+                val post = repository.createPost(content, image, communityId)
 
                 _postAddState.value = UIState.Success(null)
             } catch (e: HttpException) {
@@ -87,10 +110,10 @@ class PostFormViewModel @Inject constructor(
         _postAddState.value = UIState.Loading()
 
         viewModelScope.launch {
-            val comment = postDataState.value.data!!.copy(content = content)
+            val post = postDataState.value.data!!.copy(content = content)
 
             try {
-                val newPost = repository.updatePost(comment)
+                val newPost = repository.updatePost(post, communityId)
 
                 _postAddState.value = UIState.Success(null)
             } catch (e: HttpException) {

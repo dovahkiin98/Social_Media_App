@@ -1,10 +1,7 @@
 package net.inferno.socialmedia.ui.user
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.size
 import androidx.compose.material3.ElevatedButton
 import androidx.compose.material3.ListItem
@@ -16,15 +13,11 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
-import coil.compose.AsyncImage
-import coil.request.ImageRequest
 import net.inferno.socialmedia.R
 import net.inferno.socialmedia.model.User
-import net.inferno.socialmedia.view.UserImage
+import net.inferno.socialmedia.view.UserAvatar
 
 @Composable
 fun UserItem(
@@ -52,31 +45,14 @@ fun UserItem(
             )
         },
         leadingContent = {
-            UserImage(
-                onClick = {
-                },
+            UserAvatar(
+                user = user,
                 modifier = Modifier
                     .size(48.dp)
-            ) {
-                if (user.profileImageUrl != null) {
-                    AsyncImage(
-                        model = ImageRequest.Builder(LocalContext.current)
-                            .data(user.profileImageUrl)
-                            .crossfade(true)
-                            .build(),
-                        contentDescription = null,
-                    )
-                } else {
-                    Box(
-                        modifier = Modifier
-                            .background(Color.Red)
-                            .fillMaxSize()
-                    )
-                }
-            }
+            )
         },
         trailingContent = {
-            if(onFollowToggled != null) {
+            if (onFollowToggled != null) {
                 if (followingState) {
                     OutlinedButton(
                         onClick = toggleFollow,
@@ -98,7 +74,7 @@ fun UserItem(
                 }
             }
         },
-        modifier = Modifier
+        modifier = modifier
             .clickable(enabled = onClick != null) {
                 onClick!!(user)
             },

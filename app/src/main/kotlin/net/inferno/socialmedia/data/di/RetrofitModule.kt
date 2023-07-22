@@ -7,6 +7,7 @@ import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
+import net.inferno.socialmedia.data.Repository
 import net.inferno.socialmedia.data.remote.SocialMediaService
 import net.inferno.socialmedia.utils.LocalDateAsStringAdapter
 import okhttp3.OkHttpClient
@@ -28,7 +29,7 @@ class RetrofitModule {
         moshi: Moshi,
     ): Retrofit = Retrofit.Builder()
         .client(okHttpClient)
-        .baseUrl(preferences.getString("url", "http://192.168.234.158:1000/api/")!!)
+        .baseUrl(preferences.getString("url", Repository.apiIP(Repository.IP))!!)
         .addConverterFactory(MoshiConverterFactory.create(moshi))
         .build()
 

@@ -22,6 +22,7 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.rememberTopAppBarState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
@@ -34,6 +35,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
+import kotlinx.coroutines.launch
 import net.inferno.socialmedia.R
 import net.inferno.socialmedia.model.CommunityDetails
 import net.inferno.socialmedia.model.DummyCommunity
@@ -58,16 +60,27 @@ fun CommunityMembersUI(
     val snackbarHostState = remember { SnackbarHostState() }
 
     val uiState by viewModel.uiState.collectAsState()
+    val errorState by viewModel.errorState.collectAsState()
     val currentUser by viewModel.currentUser.collectAsState(null)
 
     val coroutineScope = rememberCoroutineScope()
 
     val pullRefreshState = rememberPullRefreshState(
-        refreshing = uiState is UIState.Refreshing,
+        refreshing = uiState.isRefreshing,
         onRefresh = {
-            viewModel.getCommunityDetails(true)
+            viewModel.getCommunityDetails()
         },
     )
+
+    LaunchedEffect(errorState) {
+        if(errorState != null) {
+            val error = errorState!!
+
+            coroutineScope.launch {
+                snackbarHostState.showSnackbar(error.message ?: error.toString())
+            }
+        }
+    }
 
     CommunityMembersUI(
         uiState = uiState,
@@ -128,6 +141,7 @@ fun CommunityMembersUI(
                             Text(
                                 uiState.data.name,
                                 fontSize = 12.sp,
+                                lineHeight = 14.sp,
                             )
                         }
                     }
@@ -160,7 +174,7 @@ fun CommunityMembersUI(
                     modifier = Modifier
                         .fillMaxSize()
                 ) {
-                    items(community.members) {
+                    items(community.members, key = { it.id }) {
                         CommunityMemberItem(
                             it,
                             community = community,
@@ -192,7 +206,7 @@ fun CommunityMembersUI(
                 }
 
                 PullRefreshIndicator(
-                    uiState is UIState.Refreshing,
+                    uiState.isRefreshing,
                     pullRefreshState,
                     modifier = Modifier
                         .align(Alignment.TopCenter)

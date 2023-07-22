@@ -7,7 +7,6 @@ import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
-import kotlinx.serialization.json.JsonObject
 import net.inferno.socialmedia.BuildConfig
 import okhttp3.Cache
 import okhttp3.Interceptor
@@ -81,7 +80,10 @@ class OkHttpModule {
             }
 
             addHeader("Accept", "application/json; charset=utf-8")
-            if (request.method != "GET") addHeader("Content-Type", "application/json; charset=utf-8")
+            if (request.method != "GET") addHeader(
+                "Content-Type",
+                "application/json; charset=utf-8"
+            )
         }
 
         val response = it.proceed(requestBuilder.build())
@@ -92,7 +94,7 @@ class OkHttpModule {
             val bodyJSON = JSONObject(body)
 
             bodyJSON.keys().forEach { key ->
-                if(key !in listOf("error", "success", "token")) {
+                if (key !in listOf("err", "success", "token")) {
                     val data = bodyJSON.get(key)
 
                     bodyJSON.put(key, null)

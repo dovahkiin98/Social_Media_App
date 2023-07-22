@@ -22,8 +22,14 @@ data class Post(
     @Json(name = "likes")
     val likes: List<String> = listOf(),
 
+    @Json(name = "dislikes")
+    val dislikes: List<String> = listOf(),
+
     @Json(name = "comments")
     val comments: List<String> = listOf(),
+
+    @Json(name = "badComments")
+    val hasBadComments: Boolean = false,
 
     @DateString
     @Json(name = "createdAt")
@@ -32,6 +38,9 @@ data class Post(
     @DateString
     @Json(name = "updatedAt")
     val updatedAt: LocalDateTime? = null,
+
+    @Json(name = "category")
+    val category: String? = null,
 
     @Json(name = "community")
     val _community: PostCommunity,
@@ -58,4 +67,13 @@ data class Post(
     override fun hashCode() = id.toInt()
 
     override fun toString() = "Post(id=$id, content=$content)"
+
+    companion object {
+        fun empty(id: String) = Post(
+            id = id,
+            content = "",
+            publisher = User.empty(""),
+            _community = PostCommunity(community = null, removed = false),
+        )
+    }
 }

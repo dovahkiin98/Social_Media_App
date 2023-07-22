@@ -4,9 +4,13 @@
 
     <uses-permission android:name="android.permission.INTERNET" />
 
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+
     <uses-permission android:name="android.permission.ACCESS_ADSERVICES_TOPICS" />
 
     <uses-permission android:name="android.permission.QUERY_ALL_PACKAGES" />
+
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
 
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
@@ -26,8 +30,10 @@
 
         <activity
             android:name=".ui.main.MainActivity"
+            android:windowSoftInputMode="adjustResize"
             android:exported="true"
             android:resizeableActivity="true"
+            android:screenOrientation="sensorPortrait"
             android:theme="@style/Theme.SocialMedia">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -35,6 +41,10 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+
+        <service
+            android:name=".service.NotificationsService"
+            android:exported="true" />
 
         <activity
             android:name="com.theartofdev.edmodo.cropper.CropImageActivity"

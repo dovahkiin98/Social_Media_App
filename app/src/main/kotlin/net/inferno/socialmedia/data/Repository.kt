@@ -3,25 +3,32 @@ package net.inferno.socialmedia.data
 import android.content.SharedPreferences
 import androidx.core.content.edit
 import androidx.core.net.toUri
+import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.ktx.snapshots
 import com.squareup.moshi.Moshi
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.withTimeout
+import net.inferno.socialmedia.BuildConfig
 import net.inferno.socialmedia.data.di.ApplicationScope
 import net.inferno.socialmedia.data.di.DefaultDispatcher
-import net.inferno.socialmedia.data.remote.RemoteDataSource
+import net.inferno.socialmedia.data.remote.SocialMediaService
 import net.inferno.socialmedia.model.Comment
 import net.inferno.socialmedia.model.Community
 import net.inferno.socialmedia.model.CommunityDetails
 import net.inferno.socialmedia.model.CommunityPost
+import net.inferno.socialmedia.model.Conversation
+import net.inferno.socialmedia.model.Message
 import net.inferno.socialmedia.model.Post
 import net.inferno.socialmedia.model.User
 import net.inferno.socialmedia.model.UserDetails
 import net.inferno.socialmedia.model.UserImage
+import net.inferno.socialmedia.model.UserNotification
 import net.inferno.socialmedia.model.request.SignupRequest
 import net.inferno.socialmedia.model.response.BaseResponse
 import okhttp3.MediaType.Companion.toMediaType
@@ -33,13 +40,16 @@ import javax.inject.Singleton
 
 @Singleton
 class Repository @Inject constructor(
-    private val remoteDataSource: RemoteDataSource,
+    private val firestore: FirebaseFirestore,
+    private val remoteDataSource: SocialMediaService,
     private val preferencesDataStore: PreferencesDataStore,
     private val preferences: SharedPreferences = preferencesDataStore.preferences,
     private val moshi: Moshi,
     @DefaultDispatcher private val dispatcher: CoroutineDispatcher,
     @ApplicationScope private val scope: CoroutineScope,
 ) {
+    val conversationsCollection = firestore.collection("conversations")
+
     //region User
     suspend fun login(
         email: String,
@@ -82,12 +92,20 @@ class Repository @Inject constructor(
         saveUser(response.data!!)
     }
 
+    suspend fun getNotifications(): List<UserNotification> {
+        val response = makeRequest {
+            remoteDataSource.getNotifications()
+        }
+
+        return response.data!!
+    }
+
     suspend fun getNewsFeed(): List<Post> {
         val response = makeRequest {
             remoteDataSource.getNewsFeed(100)
         }
 
-        val posts = response.data!!
+        val posts = response.data!!.posts
 
         for (post in posts) {
             post.files.forEach { image ->
@@ -107,7 +125,9 @@ class Repository @Inject constructor(
         }
     }
 
-    suspend fun getSavedUser() = getSavedUserFlow().first()
+    fun getUserId() = preferences.getString("userId", null)!!
+
+    private suspend fun getSavedUser() = getSavedUserFlow().first()
 
     private suspend fun saveUser(user: UserDetails) {
         preferencesDataStore.saveUser(
@@ -337,15 +357,38 @@ class Repository @Inject constructor(
         return newPost
     }
 
-    suspend fun deletePost(post: Post) {
+    suspend fun dislikePost(post: Post): Post {
         val response = makeRequest {
-            remoteDataSource.deletePost(post.id)
+            remoteDataSource.dislikePost(post.id)
+        }
+
+        val newPost = response.data!!
+
+        newPost.publisher.profileImageUrl = getUserProfileImage(newPost.publisher)
+        newPost.files.forEach {
+            it.imageUrl = getPostImage(newPost, it)
+        }
+
+        return newPost
+    }
+
+    suspend fun deletePost(
+        post: Post,
+        communityId: String? = null,
+    ) {
+        val response = makeRequest {
+            if (communityId != null) {
+                remoteDataSource.deletePost(post.id, communityId)
+            } else {
+                remoteDataSource.deletePost(post.id)
+            }
         }
     }
 
     suspend fun createPost(
         content: String,
         image: File?,
+        communityId: String?,
     ): Post {
         val filePart = if (image != null) {
             val body = image.asRequestBody("image/*".toMediaType())
@@ -362,10 +405,18 @@ class Repository @Inject constructor(
         )
 
         val response = makeRequest {
-            remoteDataSource.createPost(
-                content = contentPart,
-                image = filePart,
-            )
+            if (communityId != null) {
+                remoteDataSource.createPost(
+                    content = contentPart,
+                    image = filePart,
+                    communityId = communityId,
+                )
+            } else {
+                remoteDataSource.createPost(
+                    content = contentPart,
+                    image = filePart,
+                )
+            }
         }
 
         val newPost = response.data!!
@@ -377,9 +428,14 @@ class Repository @Inject constructor(
 
     suspend fun updatePost(
         post: Post,
+        communityId: String?,
     ): Post {
         val response = makeRequest {
-            remoteDataSource.updatePost(post.id, post.content)
+            if (communityId != null) {
+                remoteDataSource.updatePost(post.id, post.content, communityId)
+            } else {
+                remoteDataSource.updatePost(post.id, post.content)
+            }
         }
 
         val newPost = response.data!!
@@ -418,6 +474,26 @@ class Repository @Inject constructor(
             remoteDataSource.likeComment(
                 mapOf(
                     "reaction" to "like",
+                    "postId" to comment.postId,
+                    "commentId" to comment.id,
+                )
+            )
+        }
+
+        val newComment = response.data!!
+
+        newComment.user.profileImageUrl = getUserProfileImage(newComment.user)
+
+        populateReplies(newComment)
+
+        return newComment
+    }
+
+    suspend fun dislikeComment(comment: Comment): Comment {
+        val response = makeRequest {
+            remoteDataSource.dislikeComment(
+                mapOf(
+                    "reaction" to "dislike",
                     "postId" to comment.postId,
                     "commentId" to comment.id,
                 )
@@ -472,15 +548,7 @@ class Repository @Inject constructor(
     //endregion
 
     //region Community
-    suspend fun getCommunityDetails(
-        communityId: String,
-    ): CommunityDetails {
-        val response = makeRequest {
-            remoteDataSource.getCommunityDetails(communityId)
-        }
-
-        val community = response.data!!
-
+    private fun populateCommunity(community: CommunityDetails) {
         community.coverImageUrl = getCommunityCoverImage(community)
         community.pendingMembers.forEach {
             it.user.profileImageUrl = getUserProfileImage(it.user)
@@ -492,6 +560,18 @@ class Repository @Inject constructor(
             it.profileImageUrl = getUserProfileImage(it)
         }
         community.manager.profileImageUrl = getUserProfileImage(community.manager)
+    }
+
+    suspend fun getCommunityDetails(
+        communityId: String,
+    ): CommunityDetails {
+        val response = makeRequest {
+            remoteDataSource.getCommunityDetails(communityId)
+        }
+
+        val community = response.data!!
+
+        populateCommunity(community)
 
         return community
     }
@@ -514,6 +594,133 @@ class Repository @Inject constructor(
         }
 
         return posts
+    }
+
+    suspend fun getCommunityUnapprovedPosts(
+        communityId: String,
+    ): List<CommunityPost> {
+        val response = makeRequest {
+            remoteDataSource.getCommunityUnapprovedPosts(communityId)
+        }
+
+        val posts = response.data!!
+
+        posts.forEach {
+            it.post.files.forEach { image ->
+                image.imageUrl = getPostImage(it.post, image)
+            }
+
+            it.post.publisher.profileImageUrl = getUserProfileImage(it.post.publisher)
+        }
+
+        return posts
+    }
+
+    suspend fun sendJoinRequest(
+        communityId: String,
+    ): CommunityDetails {
+        val response = makeRequest {
+            remoteDataSource.sendJoinRequest(communityId)
+        }
+
+        val community = response.data!!
+
+        populateCommunity(community)
+
+        return community
+    }
+
+    suspend fun cancelJoinRequest(
+        communityId: String,
+    ): CommunityDetails {
+        val savedUser = getSavedUser()!!
+
+        val response = makeRequest {
+            remoteDataSource.cancelJoinRequest(
+                communityId,
+                savedUser.id,
+            )
+        }
+
+        val community = response.data!!
+
+        populateCommunity(community)
+
+        return community
+    }
+
+    suspend fun leaveCommunity(
+        communityId: String,
+    ): CommunityDetails {
+        val response = makeRequest {
+            remoteDataSource.leaveCommunity(communityId)
+        }
+
+        val community = response.data!!
+
+        populateCommunity(community)
+
+        return community
+    }
+
+    suspend fun approvePost(
+        post: Post,
+        communityId: String,
+    ) {
+        val response = makeRequest {
+            remoteDataSource.approvePost(post.id, communityId)
+        }
+    }
+
+    suspend fun approveJoinRequest(
+        communityId: String,
+        userId: String,
+    ) {
+        val response = makeRequest {
+            remoteDataSource.approveJoinRequest(communityId, userId)
+        }
+    }
+
+    suspend fun denyJoinRequest(
+        communityId: String,
+        userId: String,
+    ) {
+        val response = makeRequest {
+            remoteDataSource.denyJoinRequest(communityId, userId)
+        }
+    }
+
+    suspend fun kickUser(
+        communityId: String,
+        userId: String,
+    ) {
+        val response = makeRequest {
+            remoteDataSource.kickUser(communityId, userId)
+        }
+    }
+
+    suspend fun promoteUser(
+        communityId: String,
+        userId: String,
+    ) {
+        val response = makeRequest {
+            remoteDataSource.promoteUser(communityId, mapOf("adminsId" to listOf(userId)))
+        }
+    }
+
+    suspend fun demoteUser(
+        communityId: String,
+        userId: String,
+    ) {
+        val response = makeRequest {
+            remoteDataSource.demoteUser(communityId, mapOf("adminsId" to listOf(userId)))
+        }
+    }
+
+    suspend fun convertPublicity(communityId: String) {
+        val response = makeRequest {
+            remoteDataSource.convertPublicity(communityId)
+        }
     }
 
     suspend fun uploadCommunityCoverImage(
@@ -545,12 +752,114 @@ class Repository @Inject constructor(
     }
     //endregion
 
+    //region Messages
+    private suspend fun getConversations(): List<Conversation> {
+        val response = makeRequest {
+            remoteDataSource.getConversations()
+        }
+
+        val conversations = response.data!!
+
+        conversations.forEach {
+            it.users.forEach { user ->
+                user.profileImageUrl = getUserProfileImage(user, user.profileImage)
+            }
+        }
+
+        return conversations
+    }
+
+    fun getConversationsFlow(): Flow<List<Conversation>> {
+        val userId = getUserId()
+
+        return conversationsCollection.whereArrayContains(
+            "users", userId,
+        ).snapshots().map { getConversations() }
+    }
+
+    suspend fun getConversation(
+        conversationId: String,
+    ): Conversation {
+        val response = makeRequest {
+            remoteDataSource.getConversation(conversationId)
+        }
+
+        val conversation = response.data!!
+
+        conversation.users.forEach { user ->
+            user.profileImageUrl = getUserProfileImage(user, user.profileImage)
+        }
+
+        return conversation
+    }
+
+    suspend fun startConversation(
+        userId: String,
+    ): Conversation {
+        val response = makeRequest {
+            remoteDataSource.startConversation(userId)
+        }
+
+        return response.data!!
+    }
+
+    suspend fun hideConversation(
+        conversationId: String,
+    ) {
+        val response = makeRequest {
+            remoteDataSource.hideConversation(conversationId)
+        }
+    }
+
+    private suspend fun getMessages(conversationId: String): List<Message> {
+        val response = makeRequest {
+            remoteDataSource.getMessages(conversationId)
+        }
+
+        val messages = response.data!!
+
+        messages.forEach {
+            it.sender.profileImageUrl = getUserProfileImage(it.sender, it.sender.profileImage)
+        }
+
+        return messages
+    }
+
+    fun getMessagesFlow(conversationId: String): Flow<List<Message>> {
+        val userId = getUserId()
+
+        return conversationsCollection
+            .document(conversationId)
+            .collection("messages")
+            .snapshots().map { getMessages(conversationId) }
+    }
+
+
+    suspend fun sendMessage(
+        conversationId: String,
+        message: String,
+    ) {
+        val response = makeRequest {
+            remoteDataSource.sendMessage(conversationId, message)
+        }
+    }
+
+    suspend fun deleteMessage(
+        conversationId: String,
+        messageId: String,
+    ) {
+        val response = makeRequest {
+            remoteDataSource.deleteMessage(conversationId, messageId)
+        }
+    }
+    //endregion
+
     //region Images
     private fun getUserProfileImage(
         user: User,
         image: UserImage? = user.profileImage,
     ): String? {
-        val url = preferences.getString("url", "http://192.168.234.158:1000/api/")!!
+        val url = preferences.getString("url", apiIP(IP))!!
 
         return if (image?.name?.isNotEmpty() == true) {
             url.toUri().buildUpon()
@@ -567,7 +876,7 @@ class Repository @Inject constructor(
         user: User,
         image: UserImage? = user.coverImage,
     ): String? {
-        val url = preferences.getString("url", "http://192.168.234.158:1000/api/")!!
+        val url = getAPIUrl()
 
         return if (image?.name?.isNotEmpty() == true) {
             url.toUri().buildUpon()
@@ -584,7 +893,7 @@ class Repository @Inject constructor(
         post: Post,
         image: Post.PostImage,
     ): String {
-        val url = preferences.getString("url", "http://192.168.234.158:1000/api/")!!
+        val url = getAPIUrl()
 
         return url.toUri().buildUpon()
             .appendPath("post-file")
@@ -597,7 +906,7 @@ class Repository @Inject constructor(
         community: Community,
         image: String? = null,
     ): String? {
-        val url = preferences.getString("url", "http://192.168.234.158:1000/api/")!!
+        val url = getAPIUrl()
 
         if (community.coverImageName != null) {
             return url.toUri().buildUpon()
@@ -610,19 +919,29 @@ class Repository @Inject constructor(
 
         return null
     }
-    //endregion
+//endregion
 
-    fun updateUrl(url: String) {
+    private fun getAPIUrl() = preferences.getString("url", apiIP(IP))!!
+
+    fun updateIP(ip: String) {
         preferences.edit {
-            putString("url", url)
+            putString("ip", ip)
+            putString("url", apiIP(ip))
         }
     }
 
     companion object {
         const val TIMEOUT = 8_000L
+
+        const val IP = "192.168.1.103"
+        fun apiIP(ip: String) = "http://$ip:1000/api/"
     }
 
     private suspend fun <T : BaseResponse<*>> makeRequest(request: suspend () -> T): T {
+        if (BuildConfig.DEBUG) {
+            delay(500)
+        }
+
         val response = withTimeout(TIMEOUT) {
             withContext(dispatcher) {
                 request()

@@ -26,6 +26,10 @@ object Routes {
     const val COMMUNITY = "community"
     const val COMMUNITY_MEMBERS = "community/members"
     const val COMMUNITY_REQUESTS = "community/requests"
+    const val COMMUNITY_PENDING_POSTS = "community/pendingPosts"
+
+    const val CONVERSATIONS = "conversations"
+    const val CONVERSATION = "conversation"
 
     const val IMAGE = "image"
 
@@ -77,9 +81,11 @@ object Routes {
 
     fun addPost(
         post: Post?,
+        communityId: String? = null,
     ) = Uri.Builder()
         .path(ADD_POST)
         .appendQueryParameter("postId", post?.id)
+        .appendQueryParameter("communityId", communityId)
         .toString()
 
     fun addComment(
@@ -119,5 +125,19 @@ object Routes {
     ) = Uri.Builder()
         .path(COMMUNITY_REQUESTS)
         .appendQueryParameter("communityId", community.id)
+        .toString()
+
+    fun pendingPosts(
+        community: Community,
+    ) = Uri.Builder()
+        .path(COMMUNITY_PENDING_POSTS)
+        .appendQueryParameter("communityId", community.id)
+        .toString()
+
+    fun conversation(
+        conversationId: String,
+    )= Uri.Builder()
+        .path(CONVERSATIONS)
+        .appendQueryParameter("conversationId", conversationId)
         .toString()
 }

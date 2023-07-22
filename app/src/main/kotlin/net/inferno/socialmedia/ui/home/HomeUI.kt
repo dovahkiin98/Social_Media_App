@@ -2,7 +2,6 @@ package net.inferno.socialmedia.ui.home
 
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.ExperimentalFoundationApi
-import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -50,10 +49,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.nestedscroll.nestedScroll
-import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.SpanStyle
@@ -63,18 +60,17 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
-import coil.compose.AsyncImage
-import coil.request.ImageRequest
 import kotlinx.coroutines.launch
 import net.inferno.socialmedia.R
 import net.inferno.socialmedia.model.Post
 import net.inferno.socialmedia.model.UserDetails
 import net.inferno.socialmedia.ui.main.Routes
+import net.inferno.socialmedia.ui.post.PostAction
+import net.inferno.socialmedia.ui.post.PostItem
+import net.inferno.socialmedia.view.CommunityAvatar
 import net.inferno.socialmedia.view.ErrorView
 import net.inferno.socialmedia.view.LoadingView
-import net.inferno.socialmedia.view.PostAction
-import net.inferno.socialmedia.view.PostItem
-import net.inferno.socialmedia.view.UserImage
+import net.inferno.socialmedia.view.UserAvatar
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
@@ -82,8 +78,11 @@ fun HomeUI(
     navController: NavController,
     viewModel: HomeViewModel = hiltViewModel(),
 ) {
+    val lifecycle = LocalLifecycleOwner.current
+
     val snackbarHostState = remember { SnackbarHostState() }
-    val drawerState = rememberDrawerState(initialValue = DrawerValue.Open)
+    val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
+//    val drawerState = rememberDrawerState(initialValue = DrawerValue.Open)
     val drawerScrollState = rememberScrollState()
 
     val coroutineScope = rememberCoroutineScope()
@@ -105,7 +104,7 @@ fun HomeUI(
         }
     }
 
-    val user = userState.data ?: return
+    val currentUser = userState.data ?: return
 
     ModalNavigationDrawer(
         drawerState = drawerState,
@@ -121,7 +120,7 @@ fun HomeUI(
                     Spacer(Modifier.height(16.dp))
 
                     DrawerHeader(
-                        user = user,
+                        user = currentUser,
                         onClickUserImage = {
                             navController.navigate(Routes.profile(null))
                         },
@@ -140,65 +139,63 @@ fun HomeUI(
 
                     Divider()
 
-                    Text(
-                        stringResource(id = R.string.communities),
-                        fontWeight = FontWeight.Bold,
+                    ListItem(
+                        headlineContent = {
+                            Text(stringResource(id = R.string.conversations))
+                        },
                         modifier = Modifier
-                            .padding(
-                                vertical = 8.dp,
-                                horizontal = 16.dp,
-                            )
+                            .clickable {
+                                navController.navigate(Routes.CONVERSATIONS)
+                            }
                     )
 
-                    user.allCommunities.forEach {
-                        println(it.coverImageUrl)
+                    Divider()
 
-                        ListItem(
-                            leadingContent = {
-                                UserImage(
-                                    onClick = {},
-                                    modifier = Modifier
-                                        .size(48.dp)
-                                ) {
-                                    if (it.coverImageUrl != null) {
-                                        AsyncImage(
-                                            model = ImageRequest.Builder(LocalContext.current)
-                                                .data(it.coverImageUrl)
-                                                .crossfade(true)
-                                                .build(),
-                                            contentDescription = null,
-                                            contentScale = ContentScale.Crop,
-                                        )
-                                    } else {
-                                        Box(
-                                            modifier = Modifier.background(Color.Red)
+                    if (currentUser.allCommunities.isNotEmpty()) {
+                        Text(
+                            stringResource(id = R.string.communities),
+                            fontWeight = FontWeight.Bold,
+                            modifier = Modifier
+                                .padding(
+                                    vertical = 16.dp,
+                                    horizontal = 16.dp,
+                                )
+                        )
+
+                        currentUser.allCommunities.forEach {
+                            ListItem(
+                                leadingContent = {
+                                    CommunityAvatar(
+                                        community = it,
+                                        onClick = {},
+                                        modifier = Modifier
+                                            .size(48.dp)
+                                    )
+                                },
+                                headlineContent = {
+                                    Text(it.name)
+                                },
+                                supportingContent = {
+                                    if (currentUser.isAdmin(it)) {
+                                        Text(
+                                            stringResource(id = R.string.admin),
+                                            color = MaterialTheme.colorScheme.primary,
                                         )
                                     }
-                                }
-                            },
-                            headlineContent = {
-                                Text(it.name)
-                            },
-                            supportingContent = {
-                                if (user.isAdmin(it)) {
-                                    Text(
-                                        stringResource(id = R.string.admin),
-                                        color = MaterialTheme.colorScheme.primary,
-                                    )
-                                }
 
-                                if (user.isManager(it)) {
-                                    Text(
-                                        stringResource(id = R.string.manager),
-                                        color = MaterialTheme.colorScheme.tertiary,
-                                    )
-                                }
-                            },
-                            modifier = Modifier
-                                .clickable {
-                                    navController.navigate(Routes.community(it))
-                                }
-                        )
+                                    if (currentUser.isManager(it)) {
+                                        Text(
+                                            stringResource(id = R.string.manager),
+                                            color = MaterialTheme.colorScheme.tertiary,
+                                        )
+                                    }
+                                },
+                                modifier = Modifier
+                                    .clickable {
+                                        navController.navigate(Routes.community(it))
+                                    }
+                            )
+                        }
                     }
                 }
 
@@ -222,7 +219,8 @@ fun HomeUI(
                                 Text(stringResource(id = R.string.nav_menu))
                             },
                         ) {
-                            UserImage(
+                            UserAvatar(
+                                user = currentUser,
                                 onClick = {
                                     coroutineScope.launch {
                                         drawerState.open()
@@ -231,21 +229,7 @@ fun HomeUI(
                                 modifier = Modifier
                                     .padding(horizontal = 8.dp)
                                     .size(36.dp)
-                            ) {
-                                if (user.profileImageUrl != null) {
-                                    AsyncImage(
-                                        model = ImageRequest.Builder(LocalContext.current)
-                                            .data(user.profileImageUrl)
-                                            .crossfade(true)
-                                            .build(),
-                                        contentDescription = null,
-                                    )
-                                } else {
-                                    Box(
-                                        modifier = Modifier.background(Color.Red)
-                                    )
-                                }
-                            }
+                            )
                         }
                     },
                 )
@@ -258,12 +242,11 @@ fun HomeUI(
         ) { paddingValues ->
             if (postsState.data != null) {
                 val posts = postsState.data!!
-                val currentUser = userState.data!!
 
                 LazyColumn(
                     contentPadding = paddingValues,
                 ) {
-                    items(posts) {
+                    items(posts, key = { it.id }) {
                         PostItem(
                             currentUserId = currentUser.id,
                             post = it,
@@ -284,13 +267,15 @@ fun HomeUI(
                                     PostAction.Edit -> {
                                         navController.navigate(Routes.addPost(post))
                                     }
+
+                                    else -> {}
                                 }
                             },
                             onClick = { post ->
                                 navController.navigate(Routes.post(post))
                             },
                             onUserClick = { user ->
-                                navController.navigate(Routes.profile(if (currentUser.id == user.id) null else user))
+                                navController.navigate(Routes.profile(if (user.id == currentUser.id) null else user))
                             },
                             modifier = Modifier
                                 .padding(vertical = 8.dp)
@@ -401,28 +386,14 @@ fun DrawerHeader(
         modifier = Modifier.padding(horizontal = 16.dp)
     ) {
         Row {
-            UserImage(
+            UserAvatar(
+                user = user,
                 onClick = {
                     onClickUserImage()
                 },
                 modifier = Modifier
                     .size(56.dp)
-            ) {
-                if (user.profileImageUrl != null) {
-                    AsyncImage(
-                        model = ImageRequest.Builder(LocalContext.current)
-                            .data(user.profileImageUrl)
-                            .crossfade(true)
-                            .build(),
-                        contentDescription = null,
-                    )
-                } else {
-                    Box(
-                        modifier = Modifier.background(Color.Red)
-                    )
-                }
-            }
-
+            )
             Box(modifier = Modifier.weight(1f))
 
             IconButton(

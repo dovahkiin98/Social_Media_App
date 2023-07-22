@@ -4,6 +4,9 @@ import android.app.Application
 import android.content.Intent
 import android.content.SharedPreferences
 import androidx.compose.runtime.mutableStateOf
+import androidx.core.content.pm.ShortcutInfoCompat
+import androidx.core.content.pm.ShortcutManagerCompat
+import androidx.core.graphics.drawable.IconCompat
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.viewModelScope
@@ -15,8 +18,11 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import net.inferno.socialmedia.App
 import net.inferno.socialmedia.BuildConfig
+import net.inferno.socialmedia.R
 import net.inferno.socialmedia.data.Repository
 import net.inferno.socialmedia.model.UIState
+import net.inferno.socialmedia.ui.main.MainActivity
+import net.inferno.socialmedia.ui.main.Routes
 import retrofit2.HttpException
 import javax.inject.Inject
 
@@ -29,14 +35,14 @@ class LoginViewModel @Inject constructor(
     application: Application,
 ) : AndroidViewModel(application) {
     val urlValue = mutableStateOf(
-        preferences.getString("url", "http://192.168.234.158:1000/api/")!!
+        preferences.getString("ip", Repository.IP)!!
     )
 
     private val _uiState = MutableStateFlow<UIState<Unit>?>(null)
     val uiState = _uiState.asStateFlow()
 
     val emailValue = mutableStateOf(
-        if (BuildConfig.DEBUG) "ahmad.sattout.ee@gmail.com"
+        if (BuildConfig.DEBUG) "admin@email.com"
         else preferences.getString("email", "")!!
     )
     val passwordValue = mutableStateOf(if (BuildConfig.DEBUG) "12345678" else "")
@@ -51,6 +57,8 @@ class LoginViewModel @Inject constructor(
                     password = passwordValue.value.trim(),
                 )
 
+                createShortcuts()
+
                 _uiState.emit(UIState.Success(null))
             } catch (e: HttpException) {
                 _uiState.emit(UIState.Failure(Exception(e.message())))
@@ -64,9 +72,9 @@ class LoginViewModel @Inject constructor(
         }
     }
 
-    fun updateUrl(url: String) {
+    fun updateIP(ip: String) {
         viewModelScope.launch {
-            repository.updateUrl(url)
+            repository.updateIP(ip)
 
             delay(1_000)
 
@@ -80,5 +88,64 @@ class LoginViewModel @Inject constructor(
 
             Runtime.getRuntime().exit(0)
         }
+    }
+
+    private fun createShortcuts() {
+        val conversationsShortcut = ShortcutInfoCompat.Builder(getApplication(), "id_conversations")
+            .setShortLabel("Conversations")
+            .setLongLabel("Open Conversations List")
+            .setIcon(
+                IconCompat.createWithResource(
+                    getApplication(),
+                    R.drawable.ic_message,
+                )
+            )
+            .setIntent(
+                Intent(
+                    getApplication(), MainActivity::class.java,
+                ).setAction(Intent.ACTION_VIEW)
+                    .putExtra("start", Routes.CONVERSATIONS)
+            )
+            .build()
+
+        ShortcutManagerCompat.pushDynamicShortcut(getApplication(), conversationsShortcut)
+
+        val profileShortcut = ShortcutInfoCompat.Builder(getApplication(), "id_profile")
+            .setShortLabel("Profile")
+            .setLongLabel("Open Profile")
+            .setIcon(
+                IconCompat.createWithResource(
+                    getApplication(),
+                    R.drawable.ic_person,
+                )
+            )
+            .setIntent(
+                Intent(
+                    getApplication(), MainActivity::class.java,
+                ).setAction(Intent.ACTION_VIEW)
+                    .putExtra("start", Routes.USER_PROFILE)
+            )
+            .build()
+
+        ShortcutManagerCompat.pushDynamicShortcut(getApplication(), profileShortcut)
+
+        val newPostShortcut = ShortcutInfoCompat.Builder(getApplication(), "id_new_post")
+            .setShortLabel("Create Post")
+            .setLongLabel("Create a new post")
+            .setIcon(
+                IconCompat.createWithResource(
+                    getApplication(),
+                    R.drawable.ic_add,
+                )
+            )
+            .setIntent(
+                Intent(
+                    getApplication(), MainActivity::class.java,
+                ).setAction(Intent.ACTION_VIEW)
+                    .putExtra("start", Routes.ADD_POST)
+            )
+            .build()
+
+        ShortcutManagerCompat.pushDynamicShortcut(getApplication(), newPostShortcut)
     }
 }

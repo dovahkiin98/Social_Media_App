@@ -1,5 +1,7 @@
 package net.inferno.socialmedia.ui.main
 
+import android.app.PendingIntent
+import android.content.Intent
 import android.os.Build
 import android.os.Bundle
 import android.os.ext.SdkExtensions
@@ -7,6 +9,7 @@ import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.annotation.RequiresExtension
+import androidx.core.app.ServiceCompat
 import androidx.core.view.WindowCompat
 import androidx.lifecycle.lifecycleScope
 import androidx.privacysandbox.ads.adservices.topics.GetTopicsRequest
@@ -16,6 +19,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import net.inferno.socialmedia.data.PreferencesDataStore
+import net.inferno.socialmedia.service.NotificationsService
 import net.inferno.socialmedia.theme.SocialMediaTheme
 import net.inferno.socialmedia.utils.isAdServicesAvailable
 import javax.inject.Inject
@@ -34,12 +38,24 @@ class MainActivity : ComponentActivity() {
             SocialMediaTheme {
                 MainActivityUI(
                     preferences = preferences,
+                    start = intent.getStringExtra("start"),
                 )
             }
         }
 
         if (Build.VERSION.SDK_INT >= 30 && isAdServicesAvailable()) {
             topicGetter()
+        }
+
+        val intent = Intent(
+            this,
+            NotificationsService::class.java,
+        )
+
+        if(Build.VERSION.SDK_INT >= 28) {
+            startForegroundService(intent)
+        } else {
+            startService(intent)
         }
     }
 

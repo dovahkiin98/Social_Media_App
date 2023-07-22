@@ -59,10 +59,10 @@ import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.boundsInWindow
-import androidx.compose.ui.layout.layoutId
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.LocalAutofill
 import androidx.compose.ui.platform.LocalAutofillTree
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
@@ -135,6 +135,8 @@ fun LoginUI(
 
     LaunchedEffect(uiState) {
         if (uiState is UIState.Success<*>) {
+
+
             navController.popBackStack()
             navController.navigate(Routes.HOME)
         }
@@ -163,7 +165,7 @@ fun LoginUI(
             confirmButton = {
                 TextButton(
                     onClick = {
-                        viewModel.updateUrl(url)
+                        viewModel.updateIP(url)
                         showUrlDialog = false
                     },
                 ) {
@@ -324,7 +326,7 @@ fun LoginUI(
                     }
                     .onFocusChanged {
                         autofill?.run {
-                            if(it.isFocused) {
+                            if (it.isFocused) {
                                 requestAutofillForNode(emailFillNode)
                             } else {
                                 cancelAutofillForNode(emailFillNode)
@@ -382,7 +384,7 @@ fun LoginUI(
                     }
                     .onFocusChanged {
                         autofill?.run {
-                            if(it.isFocused) {
+                            if (it.isFocused) {
                                 requestAutofillForNode(passwordFillNode)
                             } else {
                                 cancelAutofillForNode(passwordFillNode)

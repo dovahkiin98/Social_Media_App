@@ -29,9 +29,9 @@ class UserFollowesViewModel @Inject constructor(
         getUserFollowings()
     }
 
-    fun getUserFollowings(isRefreshing: Boolean = false) {
+    fun getUserFollowings() {
         viewModelScope.launch {
-            _uiState.emit(if (isRefreshing) _uiState.value.refresh() else UIState.Loading())
+            _uiState.emit(_uiState.value.loading())
 
             try {
                 val followers = repository.getUserFollowings(userId)
