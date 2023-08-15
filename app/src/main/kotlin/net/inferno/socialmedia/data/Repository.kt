@@ -4,9 +4,7 @@ import android.content.SharedPreferences
 import androidx.core.content.edit
 import androidx.core.net.toUri
 import com.google.firebase.firestore.FirebaseFirestore
-import com.google.firebase.firestore.Query
 import com.google.firebase.firestore.ktx.snapshots
-import com.google.firebase.firestore.ktx.toObject
 import com.squareup.moshi.Moshi
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
@@ -37,20 +35,19 @@ import net.inferno.socialmedia.model.response.BaseResponse
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.MultipartBody
 import okhttp3.RequestBody.Companion.asRequestBody
-import org.json.JSONObject
 import java.io.File
 import javax.inject.Inject
 import javax.inject.Singleton
 
 @Singleton
 class Repository @Inject constructor(
-    private val firestore: FirebaseFirestore,
     private val remoteDataSource: SocialMediaService,
     private val preferencesDataStore: PreferencesDataStore,
     private val preferences: SharedPreferences = preferencesDataStore.preferences,
     private val moshi: Moshi,
     @DefaultDispatcher private val dispatcher: CoroutineDispatcher,
     @ApplicationScope private val scope: CoroutineScope,
+    firestore: FirebaseFirestore,
 ) {
     private val conversationsCollection = firestore.collection("conversations")
 
@@ -97,6 +94,10 @@ class Repository @Inject constructor(
     }
 
     suspend fun getNotifications(): List<UserNotification> {
+        if (!preferencesDataStore.isUserLoggedIn) {
+            return listOf()
+        }
+
         val response = makeRequest {
             remoteDataSource.getNotifications()
         }
@@ -804,7 +805,9 @@ class Repository @Inject constructor(
 
         return conversationsCollection.whereArrayContains(
             "users", userId,
-        ).snapshots().map { getConversations() }
+        ).snapshots().map {
+            getConversations()
+        }
     }
 
     suspend fun getConversation(
@@ -861,7 +864,9 @@ class Repository @Inject constructor(
         return conversationsCollection
             .document(conversationId)
             .collection("messages")
-            .snapshots().map { getMessages(conversationId) }
+            .snapshots().map {
+                getMessages(conversationId)
+            }
     }
 
 

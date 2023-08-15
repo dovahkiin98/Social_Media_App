@@ -404,8 +404,8 @@ fun UserProfileUI(
     ) { paddingValues ->
         if (user.data != null && currentUser != null) {
             val userData = user.data!!
-            var followingState = rememberSaveable(userData) {
-                currentUser!!.followes.contains(viewModel.userId)
+            var followingState by rememberSaveable(userData) {
+                mutableStateOf(currentUser!!.followes.contains(viewModel.userId))
             }
 
             Box(

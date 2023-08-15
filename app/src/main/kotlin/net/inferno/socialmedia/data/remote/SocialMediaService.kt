@@ -93,7 +93,7 @@ interface SocialMediaService {
     @PATCH("user/followers")
     suspend fun toggleFollow(
         @Query("userId") userId: String,
-    ): BaseResponse<UserDetails>
+    ): BaseResponse<Any>
     //endregion
 
     //region Posts
