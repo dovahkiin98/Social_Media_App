@@ -21,11 +21,13 @@ import net.inferno.socialmedia.ui.chat.conversation.ConversationUI
 import net.inferno.socialmedia.ui.chat.conversationsList.ConversationsListUI
 import net.inferno.socialmedia.ui.comment.form.CommentForm
 import net.inferno.socialmedia.ui.community.details.CommunityUI
+import net.inferno.socialmedia.ui.community.form.CommunityFormUI
 import net.inferno.socialmedia.ui.community.members.CommunityMembersUI
 import net.inferno.socialmedia.ui.community.pendingPosts.PendingPostsUI
 import net.inferno.socialmedia.ui.community.requests.CommunityRequestsUI
 import net.inferno.socialmedia.ui.home.HomeUI
 import net.inferno.socialmedia.ui.image.ImageUI
+import net.inferno.socialmedia.ui.interests.InterestsUI
 import net.inferno.socialmedia.ui.post.details.PostDetailsUI
 import net.inferno.socialmedia.ui.post.form.PostForm
 import net.inferno.socialmedia.ui.user.editProfile.EditProfileUI
@@ -70,6 +72,10 @@ fun MainActivityUI(
 
         composable(Routes.HOME) {
             HomeUI(navController = navController)
+        }
+
+        composable(Routes.INTERESTS) {
+            InterestsUI(navController = navController)
         }
 
         composable(
@@ -148,6 +154,12 @@ fun MainActivityUI(
             ),
         ) {
             CommentForm(navController = navController)
+        }
+
+        composable(
+            Routes.NEW_COMMUNITY,
+        ) {
+            CommunityFormUI(navController = navController)
         }
 
         composable(

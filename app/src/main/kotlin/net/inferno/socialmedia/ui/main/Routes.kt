@@ -8,6 +8,7 @@ import net.inferno.socialmedia.model.User
 
 object Routes {
     const val APPS = "apps"
+    const val INTERESTS = "interests"
 
     const val HOME = "home"
     const val LOGIN = "login"
@@ -23,13 +24,13 @@ object Routes {
     const val ADD_COMMENT = "add_comment"
     const val ADD_POST = "add_post"
 
+    const val NEW_COMMUNITY = "new_community"
     const val COMMUNITY = "community"
     const val COMMUNITY_MEMBERS = "community/members"
     const val COMMUNITY_REQUESTS = "community/requests"
     const val COMMUNITY_PENDING_POSTS = "community/pendingPosts"
 
     const val CONVERSATIONS = "conversations"
-    const val CONVERSATION = "conversation"
 
     const val IMAGE = "image"
 

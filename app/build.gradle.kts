@@ -120,7 +120,7 @@ android {
     }
 
     composeOptions {
-        kotlinCompilerExtensionVersion = "1.4.8"
+        kotlinCompilerExtensionVersion = "1.5.1"
     }
 }
 
@@ -128,7 +128,6 @@ dependencies {
     //region Kotlin
     implementation(libs.kotlin.std)
     implementation(libs.kotlinx.coroutines.android)
-    implementation(libs.kotlinx.serialization.json)
     //endregion
 
     //region AndroidX
@@ -150,7 +149,7 @@ dependencies {
 
     //region Google
     implementation(libs.google.material)
-    implementation(platform("com.google.firebase:firebase-bom:32.2.0"))
+    implementation(platform("com.google.firebase:firebase-bom:32.2.2"))
 
     implementation("com.google.firebase:firebase-firestore-ktx")
     //endregion
@@ -178,7 +177,7 @@ dependencies {
     implementation(libs.androidx.navigation.compose)
     implementation(libs.androidx.lifecycle.runtime.compose)
     implementation(libs.androidx.lifecycle.viewmodel.compose)
-//    implementation(libs.androidx.lifecycle.service)
+    implementation(libs.androidx.lifecycle.service)
 
     implementation(libs.androidx.compose.material3)
     //endregion

@@ -3,8 +3,6 @@ package net.inferno.socialmedia.ui.auth.register
 import android.util.Patterns
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.ExperimentalFoundationApi
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
@@ -180,46 +178,40 @@ fun RegisterUI(
         modifier = Modifier
             .nestedScroll(topAppBarScrollBehavior.nestedScrollConnection)
     ) { paddingValues ->
-        Column(
-            verticalArrangement = Arrangement.Center,
+        HorizontalPager(
+            state = pagerState,
+            userScrollEnabled = false,
             modifier = Modifier
                 .padding(paddingValues),
-        ) {
-            HorizontalPager(
-                state = pagerState,
-                userScrollEnabled = false,
-                modifier = Modifier
-                    .weight(1f),
-            ) { page ->
-                if (page == 0) {
-                    RegisterPhase1(
-                        inputEnabled = !isLoading,
-                        signupRequest = signupRequest,
-                        onUpdateInput = {
-                            signupRequest = it
-                        },
-                        onDone = {
-                            keyboardController?.hide()
+        ) { page ->
+            if (page == 0) {
+                RegisterPhase1(
+                    inputEnabled = !isLoading,
+                    signupRequest = signupRequest,
+                    onUpdateInput = {
+                        signupRequest = it
+                    },
+                    onDone = {
+                        keyboardController?.hide()
 
-                            if (validatePhase1()) {
-                                coroutineScope.launch {
-                                    pagerState.animateScrollToPage(1)
-                                }
+                        if (validatePhase1()) {
+                            coroutineScope.launch {
+                                pagerState.animateScrollToPage(1)
                             }
-                        },
-                    )
-                } else if (page == 1) {
-                    RegisterPhase2(
-                        isLoading = isLoading,
-                        signupRequest = signupRequest,
-                        onUpdateInput = {
-                            signupRequest = it
-                        },
-                        onDone = {
-                            register()
-                        },
-                    )
-                }
+                        }
+                    },
+                )
+            } else if (page == 1) {
+                RegisterPhase2(
+                    isLoading = isLoading,
+                    signupRequest = signupRequest,
+                    onUpdateInput = {
+                        signupRequest = it
+                    },
+                    onDone = {
+                        register()
+                    },
+                )
             }
         }
     }

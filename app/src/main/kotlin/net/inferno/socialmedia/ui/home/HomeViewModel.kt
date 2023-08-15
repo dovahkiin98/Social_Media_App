@@ -23,6 +23,7 @@ import net.inferno.socialmedia.model.Post
 import net.inferno.socialmedia.model.UIState
 import net.inferno.socialmedia.model.UserDetails
 import retrofit2.HttpException
+import java.util.concurrent.TimeoutException
 import javax.inject.Inject
 
 @HiltViewModel
@@ -54,7 +55,11 @@ class HomeViewModel @Inject constructor(
 
     private fun getUser() {
         viewModelScope.launch {
-            val user = repository.getUserDetails()
+            try {
+                repository.getUserDetails()
+            } catch(e: Exception) {
+
+            }
         }
     }
 

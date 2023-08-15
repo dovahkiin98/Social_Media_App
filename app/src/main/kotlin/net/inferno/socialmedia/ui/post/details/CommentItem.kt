@@ -96,7 +96,7 @@ fun CommentItem(
     }
     val isBadComment by remember {
         derivedStateOf {
-            currentUserId != comment.user.id && (likesScore < 0 || comment.isBadComment)
+            currentUserId != comment.user.id && (likesScore <= -1 || comment.isBadComment)
         }
     }
     var contentHidden by remember { mutableStateOf(isBadComment) }

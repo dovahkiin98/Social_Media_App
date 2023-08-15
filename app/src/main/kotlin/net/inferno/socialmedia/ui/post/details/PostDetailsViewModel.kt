@@ -46,8 +46,6 @@ class PostDetailsViewModel @Inject constructor(
         _postDataState.value = _postDataState.value.loading()
 
         viewModelScope.launch {
-            delay(1_000)
-
             try {
                 val post = repository.getPostDetails(postId)
 
@@ -66,8 +64,6 @@ class PostDetailsViewModel @Inject constructor(
         _postCommentsState.value = _postCommentsState.value.loading()
 
         viewModelScope.launch {
-            delay(1_000)
-
             try {
                 val comments = repository.getPostComments(postId)
 

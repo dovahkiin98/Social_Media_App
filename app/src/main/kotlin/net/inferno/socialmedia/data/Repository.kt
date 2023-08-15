@@ -4,7 +4,9 @@ import android.content.SharedPreferences
 import androidx.core.content.edit
 import androidx.core.net.toUri
 import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.Query
 import com.google.firebase.firestore.ktx.snapshots
+import com.google.firebase.firestore.ktx.toObject
 import com.squareup.moshi.Moshi
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
@@ -26,6 +28,7 @@ import net.inferno.socialmedia.model.Conversation
 import net.inferno.socialmedia.model.Message
 import net.inferno.socialmedia.model.Post
 import net.inferno.socialmedia.model.User
+import net.inferno.socialmedia.model.UserAction
 import net.inferno.socialmedia.model.UserDetails
 import net.inferno.socialmedia.model.UserImage
 import net.inferno.socialmedia.model.UserNotification
@@ -34,6 +37,7 @@ import net.inferno.socialmedia.model.response.BaseResponse
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.MultipartBody
 import okhttp3.RequestBody.Companion.asRequestBody
+import org.json.JSONObject
 import java.io.File
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -48,7 +52,7 @@ class Repository @Inject constructor(
     @DefaultDispatcher private val dispatcher: CoroutineDispatcher,
     @ApplicationScope private val scope: CoroutineScope,
 ) {
-    val conversationsCollection = firestore.collection("conversations")
+    private val conversationsCollection = firestore.collection("conversations")
 
     //region User
     suspend fun login(
@@ -137,6 +141,27 @@ class Repository @Inject constructor(
         preferences.edit {
             putString("userId", user.id)
         }
+    }
+
+    suspend fun getUserInterests(): List<UserAction> {
+        val response = makeRequest {
+            remoteDataSource.getUserInterests()
+        }
+
+        val interests = response.data!!
+
+        val actions = mutableListOf<UserAction>()
+
+        interests.forEach { entry ->
+            entry.value.forEach { action ->
+                action.category = entry.key
+                actions += action
+            }
+        }
+
+        actions.sortByDescending { it.date }
+
+        return actions
     }
 
     suspend fun getUserDetails(userId: String? = null): UserDetails {
@@ -270,22 +295,11 @@ class Repository @Inject constructor(
     }
 
     suspend fun toggleFollow(user: User) {
-        val savedUser = getSavedUser()!!
-
         val response = makeRequest {
             remoteDataSource.toggleFollow(user.id)
         }
 
-        if (savedUser.followes.contains(user.id)) {
-            savedUser.followes.remove(user.id)
-        } else {
-            savedUser.followes.add(user.id)
-        }
-
-//        val currentUser = response.data!!
-//        currentUser.profileImageUrl = getUserProfileImage(currentUser)
-
-        saveUser(savedUser)
+        getUserDetails()
     }
 
     suspend fun logout() {
@@ -560,6 +574,22 @@ class Repository @Inject constructor(
             it.profileImageUrl = getUserProfileImage(it)
         }
         community.manager.profileImageUrl = getUserProfileImage(community.manager)
+    }
+
+    suspend fun createCommunity(
+        name: String,
+        description: String,
+        category: String?,
+    ) {
+        val response = makeRequest {
+            remoteDataSource.createCommunity(
+                name,
+                description,
+                category,
+            )
+        }
+
+        getUserDetails()
     }
 
     suspend fun getCommunityDetails(
@@ -938,12 +968,12 @@ class Repository @Inject constructor(
     }
 
     private suspend fun <T : BaseResponse<*>> makeRequest(request: suspend () -> T): T {
-        if (BuildConfig.DEBUG) {
-            delay(500)
-        }
-
         val response = withTimeout(TIMEOUT) {
             withContext(dispatcher) {
+                if (BuildConfig.DEBUG) {
+                    delay(500)
+                }
+
                 request()
             }
         }

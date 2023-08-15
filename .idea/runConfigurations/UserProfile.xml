@@ -9,7 +9,7 @@
     <option name="ALL_USERS" value="false" />
     <option name="ALWAYS_INSTALL_WITH_PM" value="false" />
     <option name="CLEAR_APP_STORAGE" value="false" />
-    <option name="ACTIVITY_EXTRA_FLAGS" value="-e start user/profile?userId=64ba45e761f67515fb4e031d" />
+    <option name="ACTIVITY_EXTRA_FLAGS" value="-e start user/profile?userId=64da74e56217f7aee4b7f997" />
     <option name="MODE" value="default_activity" />
     <option name="CLEAR_LOGCAT" value="false" />
     <option name="SHOW_LOGCAT_AUTOMATICALLY" value="false" />

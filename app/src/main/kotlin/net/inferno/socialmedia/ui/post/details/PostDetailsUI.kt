@@ -39,8 +39,8 @@ import androidx.compose.material.pullrefresh.pullRefresh
 import androidx.compose.material.pullrefresh.rememberPullRefreshState
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.Divider
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.IconButtonDefaults
@@ -289,23 +289,33 @@ fun PostDetailsUI(
             val post = postState.data!!
             val currentUserId = currentUser!!.id
 
-            val likes = remember { mutableStateListOf(*post.likes.toTypedArray()) }
-            val dislikes = remember { mutableStateListOf(*post.dislikes.toTypedArray()) }
+            val likes by remember(postState) {
+                derivedStateOf {
+                    mutableStateListOf(*post.likes.toTypedArray())
+                }
+            }
 
-            val postLiked by remember {
+            val dislikes by remember(postState) {
+                derivedStateOf {
+                    mutableStateListOf(*post.dislikes.toTypedArray())
+                }
+            }
+
+            val postLiked by remember(postState) {
                 derivedStateOf { likes.contains(currentUserId) }
             }
-            val postDisliked by remember {
+            val postDisliked by remember(postState) {
                 derivedStateOf { dislikes.contains(currentUserId) }
             }
 
-            val likesScore by remember {
+            val likesScore by remember(postState) {
                 derivedStateOf { likes.size - dislikes.size }
             }
-            val isBadPost by remember {
+            val isBadPost by remember(postState) {
                 derivedStateOf {
-                    currentUserId != post.publisher.id && (likesScore < 0 || post.hasBadComments)
+                    currentUserId != post.publisher.id && (likesScore <= -10 || post.hasBadComments)
                 }
+                mutableStateOf(true)
             }
 
             Column {
@@ -323,7 +333,7 @@ fun PostDetailsUI(
                             top = paddingValues.calculateTopPadding(),
                         ),
                     ) {
-                        if(isBadPost) {
+                        if (isBadPost) {
                             item {
                                 Box(
                                     modifier = Modifier
@@ -334,6 +344,7 @@ fun PostDetailsUI(
                                 ) {
                                     Text(
                                         stringResource(id = R.string.post_has_bad_comments),
+                                        color = Color.White,
                                         textAlign = TextAlign.Center,
                                     )
                                 }
@@ -501,7 +512,7 @@ fun PostDetailsUI(
                                         }
                                     }
 
-                                    Divider(
+                                    HorizontalDivider(
                                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                                         modifier = Modifier.padding(horizontal = 8.dp)
                                     )

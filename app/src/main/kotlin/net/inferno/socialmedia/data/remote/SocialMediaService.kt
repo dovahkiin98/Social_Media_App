@@ -7,6 +7,7 @@ import net.inferno.socialmedia.model.Conversation
 import net.inferno.socialmedia.model.Message
 import net.inferno.socialmedia.model.Post
 import net.inferno.socialmedia.model.User
+import net.inferno.socialmedia.model.UserAction
 import net.inferno.socialmedia.model.UserDetails
 import net.inferno.socialmedia.model.UserImage
 import net.inferno.socialmedia.model.UserNotification
@@ -55,6 +56,10 @@ interface SocialMediaService {
     suspend fun getUser(
         @Path("userId") userId: String,
     ): BaseResponse<UserDetails>
+
+    @GET("user/interests")
+    suspend fun getUserInterests(
+    ): BaseResponse<Map<String, List<UserAction>>>
 
     @Multipart
     @PATCH("user/profile-image")
@@ -169,6 +174,13 @@ interface SocialMediaService {
     //endregion
 
     //region Community
+    @FormUrlEncoded
+    @POST("community")
+    suspend fun createCommunity(
+        @Field("communityName") communityName: String,
+        @Field("describtion") description: String,
+        @Field("category") category: String?,
+    ): BaseResponse<Any>
 
     @GET("community")
     suspend fun getCommunityDetails(

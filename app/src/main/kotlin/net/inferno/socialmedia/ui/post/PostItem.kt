@@ -23,6 +23,7 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Divider
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.IconButtonDefaults
@@ -97,7 +98,7 @@ fun PostItem(
     val likesScore by remember { derivedStateOf { likes.size - dislikes.size } }
     val isBadPost by remember {
         derivedStateOf {
-            currentUserId != post.publisher.id && (likesScore < 0 || post.hasBadComments)
+            currentUserId != post.publisher.id && (likesScore <= -10 || post.hasBadComments)
         }
     }
 
@@ -243,7 +244,7 @@ fun PostItem(
         }
 
         if(isApproved) {
-            Divider(
+            HorizontalDivider(
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier
                     .padding(horizontal = 8.dp)

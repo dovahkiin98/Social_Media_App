@@ -1,9 +1,11 @@
 package net.inferno.socialmedia.ui.chat.conversationsList
 
 import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
@@ -33,11 +35,14 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -128,6 +133,23 @@ fun ConversationsListUI(
                         ListItem(
                             headlineContent = {
                                 Text("${otherUser.firstName} ${otherUser.lastName}")
+                            },
+                            supportingContent = {
+                                if (it.lastMessage != null) {
+                                    val lastMessage = it.lastMessage
+
+                                    Text(
+                                        lastMessage.content,
+                                        maxLines = 2,
+                                        overflow = TextOverflow.Ellipsis,
+                                        modifier = Modifier.then(
+                                            if (lastMessage.isNegative) Modifier
+                                                .background(Color.Black)
+                                                .alpha(0f)
+                                            else Modifier
+                                        ),
+                                    )
+                                }
                             },
                             leadingContent = {
                                 UserAvatar(

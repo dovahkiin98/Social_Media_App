@@ -12,7 +12,7 @@ open class UIState<T> private constructor(
     class Loading<T>(data: T? = null) : UIState<T>(data = data, loading = true)
 
     class Success<T>(
-        data: T?
+        data: T? = null
     ) : UIState<T>(data = data)
 
     class Failure<T>(

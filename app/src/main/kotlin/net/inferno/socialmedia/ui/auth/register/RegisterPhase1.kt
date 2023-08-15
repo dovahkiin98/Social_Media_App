@@ -57,7 +57,6 @@ fun RegisterPhase1(
     }
 
     Column(
-        verticalArrangement = Arrangement.Center,
         modifier = modifier
             .windowInsetsPadding(WindowInsets.ime)
             .verticalScroll(scrollState)

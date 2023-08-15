@@ -152,4 +152,9 @@
     <string name="empty_conversation">This conversation is empty</string>
     <string name="delete_message">Delete Message</string>
     <string name="send_message">Send Message</string>
+    <string name="create_community">Create Community</string>
+    <string name="community_name">Community Name</string>
+    <string name="community_description">Community Description</string>
+    <string name="community_category">Creating Category</string>
+    <string name="creating_community">Creating Community</string>
 </resources>

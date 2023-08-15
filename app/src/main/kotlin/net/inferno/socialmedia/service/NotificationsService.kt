@@ -1,7 +1,6 @@
 package net.inferno.socialmedia.service
 
 import android.Manifest
-import android.app.Service
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.widget.Toast
@@ -10,23 +9,23 @@ import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 import androidx.core.content.ContextCompat
 import androidx.core.os.bundleOf
+import androidx.lifecycle.LifecycleService
+import androidx.lifecycle.lifecycleScope
 import dagger.hilt.android.AndroidEntryPoint
-import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import net.inferno.socialmedia.R
 import net.inferno.socialmedia.data.Repository
+import java.net.SocketException
+import java.util.concurrent.TimeoutException
 import javax.inject.Inject
 
 @AndroidEntryPoint
-class NotificationsService : Service() {
+class NotificationsService : LifecycleService() {
     @Inject
     lateinit var repository: Repository
-
-    override fun onBind(intent: Intent?) = null
 
     override fun onCreate() {
         super.onCreate()
@@ -99,13 +98,14 @@ class NotificationsService : Service() {
         }
     }
 
-    @OptIn(DelicateCoroutinesApi::class)
     override fun onStartCommand(
         intent: Intent?,
         flags: Int,
         startId: Int,
     ): Int {
-        GlobalScope.launch(Dispatchers.IO) {
+        super.onStartCommand(intent, flags, startId)
+
+        lifecycleScope.launch(Dispatchers.IO) {
             while (true) {
                 if (ContextCompat.checkSelfPermission(
                         applicationContext,
@@ -177,13 +177,15 @@ class NotificationsService : Service() {
                         }
                     }
                 } catch (e: Exception) {
-                    withContext(Dispatchers.Main.immediate) {
-                        Toast.makeText(
-                            applicationContext,
-                            e.message,
-                            Toast.LENGTH_SHORT,
-                        ).show()
-                    }
+//                    if (e !is TimeoutException && e !is SocketException) {
+//                        withContext(Dispatchers.Main.immediate) {
+//                            Toast.makeText(
+//                                applicationContext,
+//                                e.message,
+//                                Toast.LENGTH_SHORT,
+//                            ).show()
+//                        }
+//                    }
                 }
 
                 delay(5_000)

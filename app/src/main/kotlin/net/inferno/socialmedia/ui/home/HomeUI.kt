@@ -3,12 +3,16 @@ package net.inferno.socialmedia.ui.home
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.combinedClickable
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -18,10 +22,14 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.ExperimentalMaterialApi
+import androidx.compose.material.pullrefresh.PullRefreshIndicator
+import androidx.compose.material.pullrefresh.pullRefresh
+import androidx.compose.material.pullrefresh.rememberPullRefreshState
 import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Divider
 import androidx.compose.material3.DrawerValue
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.ListItem
@@ -39,6 +47,7 @@ import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.rememberDrawerState
 import androidx.compose.material3.rememberTopAppBarState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -50,7 +59,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.input.nestedscroll.nestedScroll
-import androidx.compose.ui.platform.LocalLifecycleOwner
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.SpanStyle
@@ -61,8 +70,10 @@ import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import kotlinx.coroutines.launch
+import net.inferno.socialmedia.BuildConfig
 import net.inferno.socialmedia.R
 import net.inferno.socialmedia.model.Post
+import net.inferno.socialmedia.model.UIState
 import net.inferno.socialmedia.model.UserDetails
 import net.inferno.socialmedia.ui.main.Routes
 import net.inferno.socialmedia.ui.post.PostAction
@@ -72,14 +83,16 @@ import net.inferno.socialmedia.view.ErrorView
 import net.inferno.socialmedia.view.LoadingView
 import net.inferno.socialmedia.view.UserAvatar
 
-@OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
+@OptIn(
+    ExperimentalMaterial3Api::class,
+    ExperimentalFoundationApi::class,
+    ExperimentalMaterialApi::class,
+)
 @Composable
 fun HomeUI(
     navController: NavController,
     viewModel: HomeViewModel = hiltViewModel(),
 ) {
-    val lifecycle = LocalLifecycleOwner.current
-
     val snackbarHostState = remember { SnackbarHostState() }
     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
 //    val drawerState = rememberDrawerState(initialValue = DrawerValue.Open)
@@ -97,6 +110,21 @@ fun HomeUI(
 
     val userState by viewModel.userDataState.collectAsState()
     val postsState by viewModel.postsDataState.collectAsState()
+
+    var isRefreshing by remember { mutableStateOf(false) }
+    val pullRefreshState = rememberPullRefreshState(
+        refreshing = isRefreshing,
+        onRefresh = {
+            isRefreshing = true
+            viewModel.getNewsFeed()
+        },
+    )
+
+    LaunchedEffect(postsState) {
+        if (postsState is UIState.Success) {
+            isRefreshing = false
+        }
+    }
 
     BackHandler(drawerState.isOpen) {
         coroutineScope.launch {
@@ -137,7 +165,7 @@ fun HomeUI(
 
                     Spacer(Modifier.height(16.dp))
 
-                    Divider()
+                    HorizontalDivider()
 
                     ListItem(
                         headlineContent = {
@@ -149,53 +177,64 @@ fun HomeUI(
                             }
                     )
 
-                    Divider()
+                    HorizontalDivider()
 
-                    if (currentUser.allCommunities.isNotEmpty()) {
-                        Text(
-                            stringResource(id = R.string.communities),
-                            fontWeight = FontWeight.Bold,
-                            modifier = Modifier
-                                .padding(
-                                    vertical = 16.dp,
-                                    horizontal = 16.dp,
-                                )
-                        )
-
-                        currentUser.allCommunities.forEach {
-                            ListItem(
-                                leadingContent = {
-                                    CommunityAvatar(
-                                        community = it,
-                                        onClick = {},
-                                        modifier = Modifier
-                                            .size(48.dp)
-                                    )
-                                },
-                                headlineContent = {
-                                    Text(it.name)
-                                },
-                                supportingContent = {
-                                    if (currentUser.isAdmin(it)) {
-                                        Text(
-                                            stringResource(id = R.string.admin),
-                                            color = MaterialTheme.colorScheme.primary,
-                                        )
-                                    }
-
-                                    if (currentUser.isManager(it)) {
-                                        Text(
-                                            stringResource(id = R.string.manager),
-                                            color = MaterialTheme.colorScheme.tertiary,
-                                        )
-                                    }
-                                },
-                                modifier = Modifier
-                                    .clickable {
-                                        navController.navigate(Routes.community(it))
-                                    }
+                    Text(
+                        stringResource(id = R.string.communities),
+                        fontWeight = FontWeight.Bold,
+                        modifier = Modifier
+                            .padding(
+                                vertical = 16.dp,
+                                horizontal = 16.dp,
                             )
-                        }
+                    )
+
+                    currentUser.allCommunities.forEach {
+                        ListItem(
+                            leadingContent = {
+                                CommunityAvatar(
+                                    community = it,
+                                    onClick = {},
+                                    modifier = Modifier
+                                        .size(48.dp)
+                                )
+                            },
+                            headlineContent = {
+                                Text(it.name)
+                            },
+                            supportingContent = {
+                                if (currentUser.isAdmin(it)) {
+                                    Text(
+                                        stringResource(id = R.string.admin),
+                                        color = MaterialTheme.colorScheme.primary,
+                                    )
+                                }
+
+                                if (currentUser.isManager(it)) {
+                                    Text(
+                                        stringResource(id = R.string.manager),
+                                        color = MaterialTheme.colorScheme.tertiary,
+                                    )
+                                }
+                            },
+                            modifier = Modifier
+                                .clickable {
+                                    navController.navigate(Routes.community(it))
+                                }
+                        )
+                    }
+
+                    TextButton(
+                        onClick = {
+                            navController.navigate(Routes.NEW_COMMUNITY)
+                        },
+                        modifier = Modifier
+                            .padding(8.dp)
+                            .fillMaxWidth()
+                    ) {
+                        Text(
+                            stringResource(id = R.string.create_community),
+                        )
                     }
                 }
 
@@ -232,6 +271,17 @@ fun HomeUI(
                             )
                         }
                     },
+                    modifier = Modifier
+                        .then(
+                            if (BuildConfig.DEBUG) Modifier.pointerInput(Unit) {
+                                detectTapGestures(
+                                    onDoubleTap = {
+                                        navController.navigate(Routes.INTERESTS)
+                                    },
+                                )
+                            }
+                            else Modifier
+                        )
                 )
             },
             snackbarHost = {
@@ -243,45 +293,59 @@ fun HomeUI(
             if (postsState.data != null) {
                 val posts = postsState.data!!
 
-                LazyColumn(
-                    contentPadding = paddingValues,
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .pullRefresh(pullRefreshState)
                 ) {
-                    items(posts, key = { it.id }) {
-                        PostItem(
-                            currentUserId = currentUser.id,
-                            post = it,
-                            onImageClick = { image ->
-                                navController.navigate(Routes.image(image.imageUrl!!))
-                            },
-                            onLiked = { post ->
-                                viewModel.likePost(post)
-                            },
-                            onOptionsClick = { post, action ->
-                                selectedPost = post
+                    LazyColumn(
+                        contentPadding = paddingValues,
+                    ) {
+                        items(posts, key = { it.id }) {
+                            PostItem(
+                                currentUserId = currentUser.id,
+                                post = it,
+                                onImageClick = { image ->
+                                    navController.navigate(Routes.image(image.imageUrl!!))
+                                },
+                                onLiked = { post ->
+                                    viewModel.likePost(post)
+                                },
+                                onOptionsClick = { post, action ->
+                                    selectedPost = post
 
-                                when (action) {
-                                    PostAction.Delete -> {
-                                        showPostDeletionDialog = true
+                                    when (action) {
+                                        PostAction.Delete -> {
+                                            showPostDeletionDialog = true
+                                        }
+
+                                        PostAction.Edit -> {
+                                            navController.navigate(Routes.addPost(post))
+                                        }
+
+                                        else -> {}
                                     }
-
-                                    PostAction.Edit -> {
-                                        navController.navigate(Routes.addPost(post))
-                                    }
-
-                                    else -> {}
-                                }
-                            },
-                            onClick = { post ->
-                                navController.navigate(Routes.post(post))
-                            },
-                            onUserClick = { user ->
-                                navController.navigate(Routes.profile(if (user.id == currentUser.id) null else user))
-                            },
-                            modifier = Modifier
-                                .padding(vertical = 8.dp)
-                                .animateItemPlacement(),
-                        )
+                                },
+                                onClick = { post ->
+                                    navController.navigate(Routes.post(post))
+                                },
+                                onUserClick = { user ->
+                                    navController.navigate(Routes.profile(if (user.id == currentUser.id) null else user))
+                                },
+                                modifier = Modifier
+                                    .padding(vertical = 8.dp)
+                                    .animateItemPlacement(),
+                            )
+                        }
                     }
+
+                    PullRefreshIndicator(
+                        isRefreshing,
+                        pullRefreshState,
+                        modifier = Modifier
+                            .align(Alignment.TopCenter)
+                            .padding(top = paddingValues.calculateTopPadding()),
+                    )
                 }
             } else if (postsState.error != null) {
                 val error = postsState.error!!
