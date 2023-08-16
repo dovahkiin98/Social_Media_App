@@ -184,7 +184,7 @@ fun PendingPostsUI(
                         if(posts.isNotEmpty()) {
                             items(posts) {
                                 PostItem(
-                                    currentUserId = currentUser.id,
+                                    currentUser = currentUser,
                                     isApproved = false,
                                     post = it.post,
                                     onImageClick = { image ->

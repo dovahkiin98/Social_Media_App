@@ -1,5 +1,5 @@
 [versions]
-gradle = "8.2.0-alpha15"
+gradle = "8.2.0-alpha16"
 
 kotlin = "1.9.0"
 coRoutines = "1.7.3"

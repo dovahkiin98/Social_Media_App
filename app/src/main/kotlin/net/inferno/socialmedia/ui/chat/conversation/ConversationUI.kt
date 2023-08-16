@@ -35,6 +35,7 @@ import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.material3.rememberTopAppBarState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -88,6 +89,12 @@ fun ConversationUI(
         null,
         lifecycle,
     )
+    LaunchedEffect(messages) {
+        coroutineScope.launch {
+            lazyListState.animateScrollToItem(0)
+        }
+    }
+
     val currentUser by viewModel.currentUser.collectAsState(null)
 
     currentUser ?: return
@@ -181,6 +188,7 @@ fun ConversationUI(
                             bottom = 8.dp,
                         ),
                         reverseLayout = true,
+                        state = lazyListState,
                         modifier = Modifier
                             .weight(1f)
                     ) {

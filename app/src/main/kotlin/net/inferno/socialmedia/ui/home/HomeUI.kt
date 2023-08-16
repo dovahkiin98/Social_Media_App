@@ -303,7 +303,8 @@ fun HomeUI(
                     ) {
                         items(posts, key = { it.id }) {
                             PostItem(
-                                currentUserId = currentUser.id,
+                                currentUser = currentUser,
+                                community = it.community?.community,
                                 post = it,
                                 onImageClick = { image ->
                                     navController.navigate(Routes.image(image.imageUrl!!))

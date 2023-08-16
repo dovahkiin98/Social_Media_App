@@ -21,7 +21,6 @@ import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.Divider
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
@@ -60,8 +59,10 @@ import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import kotlinx.coroutines.launch
 import net.inferno.socialmedia.R
+import net.inferno.socialmedia.model.Community
 import net.inferno.socialmedia.model.Post
 import net.inferno.socialmedia.model.User
+import net.inferno.socialmedia.model.UserDetails
 import net.inferno.socialmedia.utils.toReadableText
 import net.inferno.socialmedia.view.CustomModalBottomSheet
 import net.inferno.socialmedia.view.MDDocument
@@ -73,9 +74,10 @@ import net.inferno.socialmedia.view.UserAvatar
 )
 @Composable
 fun PostItem(
-    currentUserId: String,
+    currentUser: UserDetails,
+    currentUserId: String = currentUser.id,
     post: Post,
-    communityId: String? = null,
+    community: Community? = null,
     isApproved: Boolean = true,
     onImageClick: (Post.PostImage) -> Unit = {},
     onLiked: (Post) -> Unit = {},
@@ -163,7 +165,7 @@ fun PostItem(
                     )
                 }
 
-                if(communityId == null && post.community != null) {
+                if (community == null && post.community != null) {
                     Text(
                         post.community.community!!.name,
                         fontSize = 12.sp,
@@ -175,15 +177,20 @@ fun PostItem(
             Spacer(Modifier.width(8.dp))
 
             if (onOptionsClick != null) {
-                IconButton(
-                    onClick = {
-                        showPostSheet = true
-                    }
+                if (currentUserId == post.publisher.id || (community != null && (currentUser.isManager(
+                        community
+                    ) || currentUser.isAdmin(community)))
                 ) {
-                    Icon(
-                        Icons.Default.MoreVert,
-                        contentDescription = null,
-                    )
+                    IconButton(
+                        onClick = {
+                            showPostSheet = true
+                        }
+                    ) {
+                        Icon(
+                            Icons.Default.MoreVert,
+                            contentDescription = null,
+                        )
+                    }
                 }
             }
         }
@@ -243,7 +250,7 @@ fun PostItem(
             }
         }
 
-        if(isApproved) {
+        if (isApproved) {
             HorizontalDivider(
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier
@@ -350,7 +357,7 @@ fun PostItem(
             },
             sheetState = postSheetState,
         ) {
-            if(currentUserId == post.publisher.id && isApproved) {
+            if (currentUserId == post.publisher.id && isApproved) {
                 ListItem(
                     leadingContent = {
                         Icon(
@@ -373,7 +380,7 @@ fun PostItem(
                 )
             }
 
-            if(isApproved) {
+            if (isApproved) {
                 ListItem(
                     leadingContent = {
                         Icon(

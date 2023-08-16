@@ -637,8 +637,8 @@ fun CommunityUI(
                     if (postsState.data != null) {
                         items(postsState.data!!, key = { it.id }) {
                             PostItem(
-                                currentUserId = currentUser.id,
-                                communityId = community.id,
+                                currentUser = currentUser,
+                                community = community,
                                 post = it.post,
                                 onImageClick = { image ->
                                     navController.navigate(Routes.image(image.imageUrl!!))

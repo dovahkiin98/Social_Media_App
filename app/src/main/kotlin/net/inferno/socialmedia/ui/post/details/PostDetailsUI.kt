@@ -315,7 +315,6 @@ fun PostDetailsUI(
                 derivedStateOf {
                     currentUserId != post.publisher.id && (likesScore <= -10 || post.hasBadComments)
                 }
-                mutableStateOf(true)
             }
 
             Column {

@@ -607,7 +607,7 @@ fun UserProfileUI(
                     if (posts.data != null) {
                         items(posts.data!!, key = { it.id }) {
                             PostItem(
-                                currentUserId = currentUser!!.id,
+                                currentUser = currentUser!!,
                                 post = it,
                                 onImageClick = { image ->
                                     navController.navigate(Routes.image(image.imageUrl!!))
