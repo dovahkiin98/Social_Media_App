@@ -6,6 +6,7 @@ import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
@@ -51,10 +52,10 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.input.nestedscroll.nestedScroll
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLayoutDirection
@@ -79,7 +80,6 @@ import java.io.IOException
 
 @OptIn(
     ExperimentalMaterial3Api::class,
-    ExperimentalComposeUiApi::class,
 )
 @Composable
 fun PostForm(
@@ -227,7 +227,7 @@ fun PostForm(
                                 keyboardController?.hide()
                                 viewModel.updatePost(textFieldValue)
                             },
-                            enabled = textFieldValue.isNotBlank(),
+                            enabled = textFieldValue.isNotBlank() || image != null,
                         ) {
                             Text(stringResource(id = R.string.save_comment))
                         }
@@ -237,7 +237,7 @@ fun PostForm(
                                 keyboardController?.hide()
                                 viewModel.createPost(textFieldValue, image)
                             },
-                            enabled = textFieldValue.isNotBlank(),
+                            enabled = textFieldValue.isNotBlank() || image != null,
                         ) {
                             Text(stringResource(id = R.string.post_comment))
                         }
@@ -277,7 +277,10 @@ fun PostForm(
                 modifier = Modifier
                     .verticalScroll(scrollState)
                     .padding(paddingValues)
-                    .windowInsetsPadding(WindowInsets.ime)
+                    .windowInsetsPadding(WindowInsets.ime),
+                onRemoveImage = {
+                    image = null
+                }
             )
         } else if (postState.data != null) {
             val post = postState.data!!
@@ -359,6 +362,7 @@ fun PostInputForm(
     modifier: Modifier = Modifier,
     textFieldState: MutableState<String>,
     image: File? = null,
+    onRemoveImage: () -> Unit = {},
 ) {
     var textFieldValue by remember { textFieldState }
 
@@ -394,7 +398,15 @@ fun PostInputForm(
                     .build(),
                 contentDescription = null,
                 contentScale = ContentScale.FillWidth,
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .pointerInput(Unit) {
+                        detectTapGestures(
+                            onLongPress = {
+                                onRemoveImage()
+                            }
+                        )
+                    }
             )
         }
     }

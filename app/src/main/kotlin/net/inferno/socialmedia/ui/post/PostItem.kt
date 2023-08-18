@@ -25,7 +25,6 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -258,7 +257,7 @@ fun PostItem(
             )
 
             Row {
-                IconButton(
+                TextButton(
                     onClick = {
                         if (likes.contains(currentUserId)) {
                             likes.remove(currentUserId)
@@ -271,12 +270,20 @@ fun PostItem(
 
                         onLiked(post)
                     },
-                    colors = IconButtonDefaults.iconButtonColors(
+                    colors = ButtonDefaults.textButtonColors(
                         contentColor =
                         if (postLiked) MaterialTheme.colorScheme.primary
                         else MaterialTheme.colorScheme.onSurfaceVariant
                     ),
                 ) {
+                    Text(
+                        likes.size.toString(),
+                        textAlign = TextAlign.Center,
+                        modifier = Modifier
+                            .sizeIn(minWidth = 36.dp)
+                            .align(Alignment.CenterVertically)
+                    )
+
                     Icon(
                         painterResource(
                             if (postLiked) R.drawable.ic_thumbs_up
@@ -286,20 +293,7 @@ fun PostItem(
                     )
                 }
 
-                Text(
-                    likesScore.toString(),
-                    color = when {
-                        likesScore > 0 -> MaterialTheme.colorScheme.primary
-                        likesScore < 0 -> MaterialTheme.colorScheme.secondary
-                        else -> Color.Unspecified
-                    },
-                    textAlign = TextAlign.Center,
-                    modifier = Modifier
-                        .sizeIn(minWidth = 36.dp)
-                        .align(Alignment.CenterVertically)
-                )
-
-                IconButton(
+                TextButton(
                     onClick = {
                         if (dislikes.contains(currentUserId)) {
                             dislikes.remove(currentUserId)
@@ -312,12 +306,20 @@ fun PostItem(
 
                         onDisliked(post)
                     },
-                    colors = IconButtonDefaults.iconButtonColors(
+                    colors = ButtonDefaults.textButtonColors(
                         contentColor =
                         if (postDisliked) MaterialTheme.colorScheme.primary
                         else MaterialTheme.colorScheme.onSurfaceVariant
                     ),
                 ) {
+                    Text(
+                        dislikes.size.toString(),
+                        textAlign = TextAlign.Center,
+                        modifier = Modifier
+                            .sizeIn(minWidth = 36.dp)
+                            .align(Alignment.CenterVertically)
+                    )
+
                     Icon(
                         painterResource(
                             if (postDisliked) R.drawable.ic_thumb_down
@@ -326,6 +328,75 @@ fun PostItem(
                         contentDescription = null
                     )
                 }
+
+//                IconButton(
+//                    onClick = {
+//                        if (likes.contains(currentUserId)) {
+//                            likes.remove(currentUserId)
+//                        } else {
+//                            if (dislikes.contains(currentUserId)) {
+//                                dislikes.remove(currentUserId)
+//                            }
+//                            likes.add(currentUserId)
+//                        }
+//
+//                        onLiked(post)
+//                    },
+//                    colors = IconButtonDefaults.iconButtonColors(
+//                        contentColor =
+//                        if (postLiked) MaterialTheme.colorScheme.primary
+//                        else MaterialTheme.colorScheme.onSurfaceVariant
+//                    ),
+//                ) {
+//                    Icon(
+//                        painterResource(
+//                            if (postLiked) R.drawable.ic_thumbs_up
+//                            else R.drawable.ic_thumbs_up_off
+//                        ),
+//                        contentDescription = null
+//                    )
+//                }
+//
+//                Text(
+//                    likesScore.toString(),
+//                    color = when {
+//                        likesScore > 0 -> MaterialTheme.colorScheme.primary
+//                        likesScore < 0 -> MaterialTheme.colorScheme.secondary
+//                        else -> Color.Unspecified
+//                    },
+//                    textAlign = TextAlign.Center,
+//                    modifier = Modifier
+//                        .sizeIn(minWidth = 36.dp)
+//                        .align(Alignment.CenterVertically)
+//                )
+//
+//                IconButton(
+//                    onClick = {
+//                        if (dislikes.contains(currentUserId)) {
+//                            dislikes.remove(currentUserId)
+//                        } else {
+//                            if (likes.contains(currentUserId)) {
+//                                likes.remove(currentUserId)
+//                            }
+//                            dislikes.add(currentUserId)
+//                        }
+//
+//                        onDisliked(post)
+//                    },
+//                    colors = IconButtonDefaults.iconButtonColors(
+//                        contentColor =
+//                        if (postDisliked) MaterialTheme.colorScheme.primary
+//                        else MaterialTheme.colorScheme.onSurfaceVariant
+//                    ),
+//                ) {
+//                    Icon(
+//                        painterResource(
+//                            if (postDisliked) R.drawable.ic_thumb_down
+//                            else R.drawable.ic_thumb_down_off
+//                        ),
+//                        contentDescription = null
+//                    )
+//                }
 
                 Spacer(Modifier.width(24.dp))
 

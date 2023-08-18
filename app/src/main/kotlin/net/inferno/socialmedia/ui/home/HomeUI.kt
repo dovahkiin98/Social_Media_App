@@ -3,7 +3,6 @@ package net.inferno.socialmedia.ui.home
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -304,13 +303,15 @@ fun HomeUI(
                         items(posts, key = { it.id }) {
                             PostItem(
                                 currentUser = currentUser,
-                                community = it.community?.community,
                                 post = it,
                                 onImageClick = { image ->
                                     navController.navigate(Routes.image(image.imageUrl!!))
                                 },
                                 onLiked = { post ->
                                     viewModel.likePost(post)
+                                },
+                                onDisliked = { post ->
+                                    viewModel.dislikePost(post)
                                 },
                                 onOptionsClick = { post, action ->
                                     selectedPost = post

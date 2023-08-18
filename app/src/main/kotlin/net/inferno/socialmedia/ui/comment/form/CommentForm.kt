@@ -8,7 +8,6 @@ import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Divider
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
@@ -249,8 +248,8 @@ fun CommentForm(
                     if (textFieldValue.isEmpty()) {
                         Text(
                             stringResource(
-                                if (isComment) R.string.your_comment
-                                else R.string.your_reply
+                                if (isComment) R.string.your_reply
+                                else R.string.your_comment
                             ),
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                         )

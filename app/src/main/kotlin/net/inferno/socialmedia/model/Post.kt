@@ -11,7 +11,7 @@ data class Post(
     val id: String,
 
     @Json(name = "describtion")
-    val content: String,
+    val content: String = "",
 
     @Json(name = "publisher")
     val publisher: User,

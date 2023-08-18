@@ -92,6 +92,19 @@ class HomeViewModel @Inject constructor(
         }
     }
 
+    fun dislikePost(post: Post) {
+        viewModelScope.launch {
+            val posts = _postsDataState.value.data!!.toMutableList()
+            val index = posts.indexOf(post)
+
+            val newPost = repository.dislikePost(post)
+
+//            posts[index] = newPost
+
+            _postsDataState.emit(UIState.Success(posts))
+        }
+    }
+
     fun deletePost(post: Post) {
         _postDeletionState.value = UIState.Loading()
 

@@ -973,20 +973,28 @@ class Repository @Inject constructor(
     }
 
     private suspend fun <T : BaseResponse<*>> makeRequest(request: suspend () -> T): T {
-        val response = withTimeout(TIMEOUT) {
-            withContext(dispatcher) {
-                if (BuildConfig.DEBUG) {
-                    delay(500)
+        try {
+            val response = withTimeout(TIMEOUT) {
+                withContext(dispatcher) {
+                    if (BuildConfig.DEBUG) {
+                        delay(500)
+                    }
+
+                    request()
                 }
-
-                request()
             }
-        }
 
-        if (!response.success) {
-            throw Exception(response.error)
-        }
+            if (!response.success) {
+                throw Exception(response.error)
+            }
 
-        return response
+            return response
+        } catch(e: Exception) {
+            if(BuildConfig.DEBUG) {
+                e.printStackTrace()
+            }
+
+            throw e
+        }
     }
 }

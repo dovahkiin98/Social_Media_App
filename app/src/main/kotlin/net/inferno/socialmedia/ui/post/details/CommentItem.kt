@@ -96,7 +96,8 @@ fun CommentItem(
     }
     val isBadComment by remember {
         derivedStateOf {
-            currentUserId != comment.user.id && (likesScore <= -1 || comment.isBadComment)
+             likesScore <= -10 || comment.isBadComment
+//            currentUserId != comment.user.id &&  (likesScore <= -10 || comment.isBadComment)
         }
     }
     var contentHidden by remember { mutableStateOf(isBadComment) }
@@ -206,7 +207,7 @@ fun CommentItem(
                     Row(
                         horizontalArrangement = Arrangement.End, modifier = Modifier.fillMaxWidth()
                     ) {
-                        IconButton(
+                        TextButton(
                             onClick = {
                                 if (likes.contains(currentUserId)) {
                                     likes.remove(currentUserId)
@@ -219,33 +220,30 @@ fun CommentItem(
 
                                 onLiked(comment)
                             },
-                            colors = IconButtonDefaults.iconButtonColors(
-                                contentColor = if (commentLiked) MaterialTheme.colorScheme.primary
+                            colors = ButtonDefaults.textButtonColors(
+                                contentColor =
+                                if (commentLiked) MaterialTheme.colorScheme.primary
                                 else MaterialTheme.colorScheme.onSurfaceVariant
                             ),
                         ) {
+                            Text(
+                                likes.size.toString(),
+                                textAlign = TextAlign.Center,
+                                modifier = Modifier
+                                    .sizeIn(minWidth = 36.dp)
+                                    .align(Alignment.CenterVertically)
+                            )
+
                             Icon(
                                 painterResource(
                                     if (commentLiked) R.drawable.ic_thumbs_up
                                     else R.drawable.ic_thumbs_up_off
-                                ), contentDescription = null
+                                ),
+                                contentDescription = null
                             )
                         }
 
-                        Text(
-                            likesScore.toString(),
-                            color = when {
-                                likesScore > 0 -> MaterialTheme.colorScheme.primary
-                                likesScore < 0 -> MaterialTheme.colorScheme.secondary
-                                else -> Color.Unspecified
-                            },
-                            textAlign = TextAlign.Center,
-                            modifier = Modifier
-                                .sizeIn(minWidth = 36.dp)
-                                .align(Alignment.CenterVertically)
-                        )
-
-                        IconButton(
+                        TextButton(
                             onClick = {
                                 if (dislikes.contains(currentUserId)) {
                                     dislikes.remove(currentUserId)
@@ -258,18 +256,94 @@ fun CommentItem(
 
                                 onDisliked(comment)
                             },
-                            colors = IconButtonDefaults.iconButtonColors(
-                                contentColor = if (commentDisliked) MaterialTheme.colorScheme.primary
+                            colors = ButtonDefaults.textButtonColors(
+                                contentColor =
+                                if (commentDisliked) MaterialTheme.colorScheme.primary
                                 else MaterialTheme.colorScheme.onSurfaceVariant
                             ),
                         ) {
+                            Text(
+                                dislikes.size.toString(),
+                                textAlign = TextAlign.Center,
+                                modifier = Modifier
+                                    .sizeIn(minWidth = 36.dp)
+                                    .align(Alignment.CenterVertically)
+                            )
+
+
                             Icon(
                                 painterResource(
                                     if (commentDisliked) R.drawable.ic_thumb_down
                                     else R.drawable.ic_thumb_down_off
-                                ), contentDescription = null
+                                ),
+                                contentDescription = null
                             )
                         }
+
+//                        IconButton(
+//                            onClick = {
+//                                if (likes.contains(currentUserId)) {
+//                                    likes.remove(currentUserId)
+//                                } else {
+//                                    if (dislikes.contains(currentUserId)) {
+//                                        dislikes.remove(currentUserId)
+//                                    }
+//                                    likes.add(currentUserId)
+//                                }
+//
+//                                onLiked(comment)
+//                            },
+//                            colors = IconButtonDefaults.iconButtonColors(
+//                                contentColor = if (commentLiked) MaterialTheme.colorScheme.primary
+//                                else MaterialTheme.colorScheme.onSurfaceVariant
+//                            ),
+//                        ) {
+//                            Icon(
+//                                painterResource(
+//                                    if (commentLiked) R.drawable.ic_thumbs_up
+//                                    else R.drawable.ic_thumbs_up_off
+//                                ), contentDescription = null
+//                            )
+//                        }
+//
+//                        Text(
+//                            likesScore.toString(),
+//                            color = when {
+//                                likesScore > 0 -> MaterialTheme.colorScheme.primary
+//                                likesScore < 0 -> MaterialTheme.colorScheme.secondary
+//                                else -> Color.Unspecified
+//                            },
+//                            textAlign = TextAlign.Center,
+//                            modifier = Modifier
+//                                .sizeIn(minWidth = 36.dp)
+//                                .align(Alignment.CenterVertically)
+//                        )
+//
+//                        IconButton(
+//                            onClick = {
+//                                if (dislikes.contains(currentUserId)) {
+//                                    dislikes.remove(currentUserId)
+//                                } else {
+//                                    if (likes.contains(currentUserId)) {
+//                                        likes.remove(currentUserId)
+//                                    }
+//                                    dislikes.add(currentUserId)
+//                                }
+//
+//                                onDisliked(comment)
+//                            },
+//                            colors = IconButtonDefaults.iconButtonColors(
+//                                contentColor = if (commentDisliked) MaterialTheme.colorScheme.primary
+//                                else MaterialTheme.colorScheme.onSurfaceVariant
+//                            ),
+//                        ) {
+//                            Icon(
+//                                painterResource(
+//                                    if (commentDisliked) R.drawable.ic_thumb_down
+//                                    else R.drawable.ic_thumb_down_off
+//                                ), contentDescription = null
+//                            )
+//                        }
 
                         TextButton(
                             onClick = {

@@ -3,7 +3,9 @@ package net.inferno.socialmedia.ui.auth.register
 import android.util.Patterns
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -37,7 +39,6 @@ import net.inferno.socialmedia.ui.main.Routes
 import net.inferno.socialmedia.view.BackIconButton
 
 @OptIn(
-    ExperimentalComposeUiApi::class,
     ExperimentalMaterial3Api::class,
     ExperimentalFoundationApi::class,
 )
@@ -175,6 +176,7 @@ fun RegisterUI(
         snackbarHost = {
             SnackbarHost(hostState = snackbarHostState)
         },
+        contentWindowInsets = WindowInsets.statusBars,
         modifier = Modifier
             .nestedScroll(topAppBarScrollBehavior.nestedScrollConnection)
     ) { paddingValues ->
