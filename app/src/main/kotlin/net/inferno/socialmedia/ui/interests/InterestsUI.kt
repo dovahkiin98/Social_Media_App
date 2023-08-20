@@ -196,7 +196,7 @@ fun UserFollowesUIPreview() {
 
 fun Int.toStringSigned() = buildString {
     if (this@toStringSigned > 0) {
-        append("6")
+        append("+")
     } else {
         append("-")
     }

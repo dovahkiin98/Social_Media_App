@@ -44,6 +44,8 @@ fun MainActivityUI(
 ) {
 //    val start = Routes.LOGIN
 
+    println(start)
+
     val initialRoute = if (preferences.isUserLoggedIn) Routes.HOME else Routes.LOGIN
 
     var navigated by rememberSaveable { mutableStateOf(false) }

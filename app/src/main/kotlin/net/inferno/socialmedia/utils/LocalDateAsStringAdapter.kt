@@ -8,6 +8,10 @@ import com.squareup.moshi.JsonQualifier
 import com.squareup.moshi.ToJson
 import net.inferno.socialmedia.R
 import java.time.LocalDateTime
+import java.time.OffsetTime
+import java.time.ZoneId
+import java.time.ZoneOffset
+import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
 import java.time.temporal.ChronoUnit
 import java.time.temporal.Temporal
@@ -30,11 +34,11 @@ class LocalDateAsStringAdapter {
     @DateString
     fun fromJson(time: String): LocalDateTime = LocalDateTime.from(
         DateTimeFormatter.ofPattern(DATE_FORMAT_PATTERN).parse(time)
-    )
+    ).plusSeconds(ZonedDateTime.now().offset.totalSeconds.toLong())
 }
 
 @Composable
-fun Temporal.toReadableText(): String {
+fun LocalDateTime.toReadableText(): String {
     val today = LocalDateTime.now()
 
     val years = ChronoUnit.YEARS.between(this, today)

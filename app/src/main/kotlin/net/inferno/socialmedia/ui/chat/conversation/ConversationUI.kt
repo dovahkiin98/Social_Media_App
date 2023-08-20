@@ -1,6 +1,5 @@
 package net.inferno.socialmedia.ui.chat.conversation
 
-import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Box
@@ -211,6 +210,7 @@ fun ConversationUI(
                             .padding(36.dp)
                             .padding(paddingValues)
                             .weight(1f)
+                            .fillMaxWidth()
                     ) {
                         Text(
                             stringResource(id = R.string.empty_conversation),
